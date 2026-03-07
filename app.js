@@ -1,8 +1,7 @@
-require("dotenv").config();
-
-const express = require("express");
-const cors = require("cors");
-const connectDB = require("./config/db");
+import express from "express";
+import {globalError} from "./Middlewares/globalError.js"
+import cors from "cors";
+import connectDB from "./Config/db.config.js";
 
 const app = express();
 
@@ -14,6 +13,11 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.send("Ecommerce API Running");
 });
+
+
+
+app.use(globalError);
+
 
 const PORT = process.env.PORT || 5000;
 
