@@ -2,13 +2,17 @@ import express from "express";
 import {globalError} from "./Middlewares/globalError.js"
 import cors from "cors";
 import connectDB from "./Config/db.config.js";
+import dotenv from "dotenv";
+import authRoutes from "./Routes/auth.route.js";
 
+dotenv.config();
 const app = express();
 
 connectDB();
 
 app.use(cors());
 app.use(express.json());
+app.use(authRoutes)
 
 app.get("/", (req, res) => {
   res.send("Ecommerce API Running");
