@@ -1,8 +1,10 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+import express from "express";
+import cors from "cors";
+import connectDB from "./config/db.config.js";
+import authRoutes from "./Routes/auth.route.js";
 
-const express = require("express");
-const cors = require("cors");
-const connectDB = require("./config/db");
+dotenv.config();
 
 const app = express();
 
@@ -10,6 +12,7 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
+app.use(authRoutes)
 
 app.get("/", (req, res) => {
   res.send("Ecommerce API Running");
