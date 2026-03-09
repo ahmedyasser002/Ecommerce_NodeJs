@@ -13,7 +13,7 @@ let addProduct = asyncHandler(
 
         let user = req.user
         req.body.seller = user._id
-        let newProduct = await productModel.insertMany(req.body);
+        let newProduct = await productModel.create(req.body);
         res.status(201).json({ message: "Product Created", data: newProduct })
 
 
