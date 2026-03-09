@@ -1,10 +1,12 @@
 
-export default function validationMiddleware(validationSchema) {
-    return(req, res, next) => {
-        const validation = validationSchema.validate(req.body)
-        if (validation.error) {
-            return res.status(400).json({ error: validation.error.details[0].message })
+export default function validationMiddleware(schema) {
+    return (req, res, next) => {
+        const { error } = schema.validate(req.body)
+
+        if (error) {
+            return next(new AppError(error.details[0].message, 400))
         }
+
         next()
     }
 }

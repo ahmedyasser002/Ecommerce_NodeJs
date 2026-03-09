@@ -23,8 +23,24 @@ let addProduct = asyncHandler(
 
 let getAllProducts = asyncHandler(
     async(req,res)=>{
-        let allProducts = await productModel.find();
-        res.status(200).json({ message: "List of Products ", data: allProducts })
+
+    let page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
+    let skip = (page-1) * limit;
+    let products = await productModel.find()
+      .skip(skip) 
+      .limit(limit) 
+      
+    const totalDocuments = await productModel.countDocuments();
+    
+    res.status(200).json({
+      page,
+      limit,
+      totalDocuments,
+      totalPages: Math.ceil(totalDocuments / limit),
+      products
+    });
+  
     }
 )
 
