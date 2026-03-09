@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+import AppError from "../Utils/AppError.js"
+
+>>>>>>> user_authenication
 export default function validationMiddleware(schema) {
     return (req, res, next) => {
         const { error } = schema.validate(req.body)
