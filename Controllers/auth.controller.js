@@ -2,16 +2,19 @@ import { userModel } from "../Models/User.js" ;
 import jwt from "jsonwebtoken" ;
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
+import asyncHandler from "../Middlewares/asyncHandler.js"
 
 
-let signup = async (req , res)=>{
+
+let signup = asyncHandler( async (req , res)=>{
     let newUser = await userModel.create(req.body);
     newUser.password  = undefined ;
     res.status(200).json({message:"user created succsefully" , payload : newUser})
 
 }
+)
 
-let signin = async(req , res )=>{
+let signin = asyncHandler(async(req , res )=>{
     let founduser = req.founduser ;
     let ismatched = bcrypt.compareSync( req.body.password,founduser.password);
     if(ismatched){
@@ -23,4 +26,5 @@ let signin = async(req , res )=>{
 
 
 }
+)
 export {signup , signin }
