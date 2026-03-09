@@ -21,4 +21,11 @@ let addProduct = asyncHandler(
 
 )
 
-export { addProduct }
+let getAllProducts = asyncHandler(
+    async(req,res)=>{
+        let allProducts = await productModel.find();
+        res.status(200).json({ message: "List of Products ", data: allProducts })
+    }
+)
+
+export { addProduct , getAllProducts }
