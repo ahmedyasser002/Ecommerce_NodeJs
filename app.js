@@ -16,9 +16,7 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
-app.use(authRoutes)
 
-app.use("/api/products", productRoutes);
 app.use("/category", categoryRoutes)
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
