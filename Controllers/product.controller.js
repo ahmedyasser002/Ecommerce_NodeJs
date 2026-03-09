@@ -23,8 +23,13 @@ const getAllProducts = asyncHandler(
     const { page , limit , skip } = getPagination(req);
     const products = await productModel.find()
       .skip(skip) 
-      .limit(limit) 
-      
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .populate("category","name")
+      .populate("seller", "name")
+
+
+    // Search about estimatedCountDocuments  
     const totalDocuments = await productModel.countDocuments();
     
     res.status(200).json({
