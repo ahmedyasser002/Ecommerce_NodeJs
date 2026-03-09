@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const categoryModel = new mongoose.Schema({
+const categorySchema = mongoose.Schema({
     name:String,
     isActive: Boolean,
     priority: Number,
@@ -8,4 +8,4 @@ const categoryModel = new mongoose.Schema({
     timestamps : true
 })
 
-export default mongoose.model('Category', categoryModel)
+export const categoryModel = mongoose.model('Category', categorySchema)
