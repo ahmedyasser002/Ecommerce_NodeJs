@@ -1,8 +1,15 @@
 import asyncHandler from "../Middlewares/asyncHandler.js"
 import { productModel } from "../Models/Product.js"
+import AppError from "../Utils/AppError.js";
+import { productSchemaValidation } from "../Validations/productValidation.js"
 
 let addProduct = asyncHandler(
     async(req,res) =>{
+
+        const { error } = productSchemaValidation.validate((req.body));
+        if(error){
+            throw new AppError(error.details ,400)
+        }
 
         let user = req.user
         req.body.seller = user._id
