@@ -52,6 +52,7 @@ export const signupValidation = Joi.object({
     password:attributes.password ,
     name:attributes.name ,
     address:attributes.address,
+    role:Joi.string().valid("customer","seller","admin"),
     phone:attributes.phone
 })
 export const loginValidation= Joi.object({
