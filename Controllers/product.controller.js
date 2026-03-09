@@ -6,11 +6,6 @@ import { productSchemaValidation } from "../Validations/productValidation.js"
 let addProduct = asyncHandler(
     async(req,res) =>{
 
-        const { error } = productSchemaValidation.validate((req.body));
-        if(error){
-            throw new AppError(error.details ,400)
-        }
-
         let user = req.user
         req.body.seller = user._id
         let newProduct = await productModel.create(req.body);
@@ -43,5 +38,7 @@ let getAllProducts = asyncHandler(
   
     }
 )
+
+
 
 export { addProduct , getAllProducts }
