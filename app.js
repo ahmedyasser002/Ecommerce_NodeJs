@@ -19,13 +19,8 @@ app.use(cors());
 app.use(express.json());
 app.use(globalError);
 
-app.use("/category", categoryRoutes)
-app.use("/auth", authRoutes);
-app.use("/products", productRoutes);
-app.use("/reviews", reviewRoutes);
-app.use("/cart", cartRoutes);
 
-app.use("/api/products", productRoutes);
+app.use("/products", productRoutes);
 app.use("/category", categoryRoutes)
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
