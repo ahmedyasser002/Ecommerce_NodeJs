@@ -2,6 +2,7 @@ import express from "express";
 import {globalError} from "./Middlewares/globalError.js"
 import cors from "cors";
 import connectDB from "./Config/db.config.js";
+import categoryRoutes from "./Routes/category.route.js";
 import dotenv from "dotenv";
 import authRoutes from "./Routes/auth.route.js";
 import productRoutes from "./Routes/product.route.js";
@@ -14,6 +15,7 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
+app.use(categoryRoutes)
 app.use(authRoutes)
 app.use("/api/products", productRoutes);
 app.use(reviewRoutes)
