@@ -1,4 +1,3 @@
-
 export default function validationMiddleware(schema) {
     return (req, res, next) => {
         const { error } = schema.validate(req.body)
