@@ -7,9 +7,12 @@ import asyncHandler from "../Middlewares/asyncHandler.js"
 
 
 let signup = asyncHandler( async (req , res)=>{
+    if (req.file) {
+        req.body.image = req.file.filename;
+    }
     let newUser = await userModel.create(req.body);
     newUser.password  = undefined ;
-    res.status(200).json({message:"user created succsefully" , payload : newUser})
+    res.status(201).json({message:"user created succsefully" , payload : newUser})
 
 }
 )
