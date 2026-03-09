@@ -42,4 +42,6 @@ const productSchema = new mongoose.Schema({
 }
 );
 
+productSchema.index({ name: 1, seller: 1 }, { unique: true });
+
 export const productModel = mongoose.model("Product", productSchema)
