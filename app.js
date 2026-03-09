@@ -5,6 +5,7 @@ import connectDB from "./Config/db.config.js";
 import dotenv from "dotenv";
 import authRoutes from "./Routes/auth.route.js";
 import productRoutes from "./Routes/product.route.js";
+import reviewRoutes from "./Routes/review.route.js";
 
 dotenv.config();
 const app = express();
@@ -15,6 +16,7 @@ app.use(cors());
 app.use(express.json());
 app.use(authRoutes)
 app.use("/api/products", productRoutes);
+app.use(reviewRoutes)
 
 app.get("/", (req, res) => {
   res.send("Ecommerce API Running");

@@ -1,5 +1,5 @@
 import express from "express";
-import isauthenticated from "../Middlewares/authenticationMiddleware.js";
+import {isauthenticated }from "../Middlewares/authenticationMiddleware.js";
 import { authorizationMiddleware } from "../Middlewares/autorizationMiddleware.js";
 import { addProduct } from "../Controllers/product.controller.js";
 import { ROLES } from "../Constants/roles.js";
