@@ -62,6 +62,10 @@ const userScheme = new mongoose.Schema({
     default:false 
 
  }
+ ,
+ image:{
+   type:String
+ }
 },
 {
  timestamps:true ,
