@@ -7,6 +7,5 @@ import { upload } from "../Utils/upload.js";
 let authRoutes = express.Router();
 authRoutes.post("/signup",upload.single('image'),validationforRegisteation,checkEmail,signup)
 authRoutes.post("/signin" ,validationforLogin,checkEmail ,signin )
-authRoutes.get("/verify/:email", emailVerification)
 
 export default authRoutes
