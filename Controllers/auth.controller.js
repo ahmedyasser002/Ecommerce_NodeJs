@@ -1,8 +1,11 @@
 import { userModel } from "../Models/User.js" ;
 import jwt from "jsonwebtoken" ;
-import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
 import bcrypt from "bcrypt";
 import asyncHandler from "../Middlewares/asyncHandler.js"
+import { fileURLToPath } from "url";
+import { sendEmail } from "../Email/sendEmail.js";
 
 
 
@@ -11,6 +14,7 @@ let signup = asyncHandler( async (req , res)=>{
         req.body.image = req.file.filename;
     }
     let newUser = await userModel.create(req.body);
+    sendEmail(req.body.email)
     newUser.password  = undefined ;
     res.status(201).json({message:"user created succsefully" , payload : newUser})
 
@@ -21,6 +25,10 @@ let signin = asyncHandler(async(req , res )=>{
     let founduser = req.founduser ;
     let ismatched = bcrypt.compareSync( req.body.password,founduser.password);
     if(ismatched){
+        if(!founduser.isConfirmed){
+             return res.status(401).json({message: "You cannot log in without verifying your email "})
+
+        }
         const secret_key = process.env.JWT_SECRET ;
         let token  = jwt.sign({role:founduser.role , email:founduser.email , _id :founduser._id} , secret_key);
         return res.json({message: "Hello", data: founduser, token: token})
@@ -30,4 +38,25 @@ let signin = asyncHandler(async(req , res )=>{
 
 }
 )
-export {signup , signin }
+
+let emailVerification = async (req,res)=>{
+    let email = req.params.email ;
+    const email_signature = process.env.EMAIL_Token ;
+    let verifiedEmail = jwt.verify(email,email_signature,async(err ,decoded)=>{
+        if(err){
+            return res.status(401).json({message: "Invalid Token"})
+        }
+
+        await userModel.findOneAndUpdate({email:decoded},{isConfirmed:true}) ;
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        const htmlFilePath = path.join(__dirname, "..", process.env.HTML_FILE);
+        const htmlContent = await fs.promises.readFile(htmlFilePath, "utf-8");
+        res.writeHead(200, { "Content-Type": "text/html" });
+        res.end(htmlContent);
+
+    })
+}
+
+
+export {signup , signin ,emailVerification}
