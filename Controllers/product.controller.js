@@ -2,7 +2,7 @@ import asyncHandler from "../Middlewares/asyncHandler.js"
 import { productModel } from "../Models/Product.js"
 import AppError from "../Utils/AppError.js";
 import { getPagination } from "../Utils/pagination.js";
-import { productSchemaValidation } from "../Validations/productValidation.js"
+import { objectIdValidator } from "../Utils/validators.js";
 
 const addProduct = asyncHandler(
     async(req,res) =>{
@@ -71,6 +71,25 @@ const getSellerProducts = asyncHandler(
     }
 )
 
+const updateSellerProduct = asyncHandler(
+    async(req,res)=>{
+        const productID = req.params.id;
+         if (!objectIdValidator(productID)) {
+            throw new AppError("Invalid Product ID", 400);
+        }
+        const updatedProduct = await productModel.findByIdAndUpdate(productID, req.body, {new:true,runValidators: true
+        });
+        if(!updatedProduct){
+            throw new AppError("Product not found", 404);
+        }
+
+        res.status(200).json({ message: "Product Updated", data: updatedProduct })
 
 
-export { addProduct , getAllProducts, getSellerProducts }
+    }
+)
+
+
+
+
+export { addProduct , getAllProducts, getSellerProducts, updateSellerProduct }
