@@ -1,4 +1,4 @@
-export const emailTemplate = (email) => {
+export const emailTemplate = (emailToken) => {
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -21,7 +21,7 @@ export const emailTemplate = (email) => {
     <h1>Email Verification</h1>
     <p>Hi there,</p>
     <p>Thank you for registering. Please verify your email address by clicking the button below:</p>
-    <a href="http://localhost:5000/verify/${email}" class="btn">Verify Email</a>
+    <a href="http://localhost:5000/auth/verify/${emailToken}" class="btn">Verify Email</a>
     <p>If you didn't create an account, you can safely ignore this email.</p>
     <div class="footer">&copy; 2026 Your Company. All rights reserved.</div>
 </div>
@@ -29,3 +29,7 @@ export const emailTemplate = (email) => {
 </html>
   `;
 };
+
+
+
+

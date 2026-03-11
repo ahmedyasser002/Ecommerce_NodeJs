@@ -2,7 +2,12 @@ import { Router } from "express";
 import  {list_user_reviews,createReview , updateReview,deleteReview} from "../Controllers/review.controller.js" ;
 import { isauthenticated } from "../Middlewares/authenticationMiddleware.js";
 import { authorizationMiddleware } from "../Middlewares/autorizationMiddleware.js";
+<<<<<<< Updated upstream
 import { validationforReview } from "../Middlewares/review.validation.middleware.js";
+=======
+import validationMiddleware from "../Middlewares/validationMiddleware.js";
+import { reviewValidationSchema } from "../Validations/reviewValidation.js";
+>>>>>>> Stashed changes
 import { ROLES } from "../Constants/roles.js";
 
 let reviewRoutes = new Router() ;
