@@ -69,6 +69,7 @@ const userScheme = new mongoose.Schema({
     type:addressSchema,
     required:function(){
       return this.role == "customer" || this.role == "seller"
+
     }
  },
  isConfirmed:{
