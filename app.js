@@ -15,20 +15,20 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
-app.use(categoryRoutes)
-app.use(authRoutes)
-app.use("/api/products", productRoutes);
-app.use(reviewRoutes)
+
+app.use("/category", categoryRoutes)
+app.use("/auth", authRoutes);
+app.use("/products", productRoutes);
+app.use("/reviews", reviewRoutes);
+
+
+
 
 app.get("/", (req, res) => {
   res.send("Ecommerce API Running");
 });
 
-
-
 app.use(globalError);
-
-
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () =>
