@@ -7,6 +7,7 @@ export default function validationMiddleware(schema) {
             return next(new AppError(error.details[0].message, 400))
         }
 
+
         next()
     }
 }

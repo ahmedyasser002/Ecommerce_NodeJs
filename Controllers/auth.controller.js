@@ -5,7 +5,7 @@ import path from "path";
 import bcrypt from "bcrypt";
 import asyncHandler from "../Middlewares/asyncHandler.js"
 import { fileURLToPath } from "url";
-import { sendEmail } from "../Email/checkEmail.js";
+import { sendEmail } from "../Email/sendEmail.js";
 
 
 
@@ -46,6 +46,7 @@ let emailVerification = async (req,res)=>{
         if(err){
             return res.status(401).json({message: "Invalid Token"})
         }
+
         await userModel.findOneAndUpdate({email:decoded},{isConfirmed:true}) ;
         const __filename = fileURLToPath(import.meta.url);
         const __dirname = path.dirname(__filename);
@@ -56,4 +57,6 @@ let emailVerification = async (req,res)=>{
 
     })
 }
+
+
 export {signup , signin ,emailVerification}

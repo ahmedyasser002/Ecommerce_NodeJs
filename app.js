@@ -22,8 +22,12 @@ app.use("/category", categoryRoutes)
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
 app.use("/reviews", reviewRoutes);
+<<<<<<< HEAD
 app.use("/cart", cartRoutes);
 app.use("/user", userRoutes);
+=======
+
+>>>>>>> email_confirmation
 
 
 

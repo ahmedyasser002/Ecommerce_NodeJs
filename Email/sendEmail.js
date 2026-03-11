@@ -1,8 +1,7 @@
 import nodemailer from "nodemailer" ;
 import jwt from "jsonwebtoken" ;
 import { emailTemplate } from "./emailTemplate.js";
-// Create a transporter using Ethereal test credentials.
-// For production, replace with your actual SMTP server details.
+
 export async function sendEmail (email) {
 const user = process.env.EMAIL_USER ;
 const pass = process.env.EMAIL_PASS ;
