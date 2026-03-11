@@ -1,12 +1,13 @@
-import dotenv from "dotenv";
 import express from "express";
+import {globalError} from "./Middlewares/globalError.js"
 import cors from "cors";
-import connectDB from "./config/db.config.js";
+import connectDB from "./Config/db.config.js";
+import categoryRoutes from "./Routes/category.route.js";
+import dotenv from "dotenv";
 import authRoutes from "./Routes/auth.route.js";
 import userRoutes from "./Routes/user.route.js";
 
 dotenv.config();
-
 const app = express();
 
 connectDB();
@@ -18,10 +19,13 @@ app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 
 
+
+
 app.get("/", (req, res) => {
   res.send("Ecommerce API Running");
 });
 
+app.use(globalError);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () =>

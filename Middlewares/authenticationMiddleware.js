@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken" ;
-
 export let isauthenticated = (req,res,next) => {
      let token = req.headers.token
      const secret_key = process.env.JWT_SECRET ;
@@ -16,4 +15,3 @@ export let isauthenticated = (req,res,next) => {
        })
 }
 
-export default isauthenticated

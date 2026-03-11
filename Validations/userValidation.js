@@ -51,9 +51,13 @@ export const signupValidation = Joi.object({
     email:attributes.email , 
     password:attributes.password ,
     name:attributes.name ,
-    address:attributes.address,
     role:Joi.string().valid("customer","seller","admin"),
-    phone:attributes.phone
+    phone:attributes.phone,
+    address: attributes.address.when("role", {
+    is: Joi.valid("customer", "seller"),
+    then: attributes.address.required(),
+    otherwise: Joi.forbidden(), 
+  }),
 })
 export const loginValidation= Joi.object({
     email:attributes.email ,
