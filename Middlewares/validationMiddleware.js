@@ -1,4 +1,3 @@
-import AppError from "../Utils/AppError.js"
 
 export default function validationMiddleware(schema) {
     return (req, res, next) => {
@@ -7,7 +6,6 @@ export default function validationMiddleware(schema) {
         if (error) {
             return next(new AppError(error.details[0].message, 400))
         }
-
         next()
     }
 }
