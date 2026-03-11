@@ -17,10 +17,7 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
-app.use(globalError);
 
-
-app.use("/products", productRoutes);
 app.use("/category", categoryRoutes)
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
@@ -29,10 +26,12 @@ app.use("/cart", cartRoutes);
 app.use("/user", userRoutes);
 
 
+
 app.get("/", (req, res) => {
   res.send("Ecommerce API Running");
 });
 
+app.use(globalError);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () =>

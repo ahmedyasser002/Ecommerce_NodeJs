@@ -1,4 +1,3 @@
-
 import AppError from "../Utils/AppError.js"
 export default function validationMiddleware(schema) {
     return (req, res, next) => {

@@ -1,7 +1,7 @@
 import express from "express";
 import { isauthenticated }from "../Middlewares/authenticationMiddleware.js";
 import { authorizationMiddleware } from "../Middlewares/autorizationMiddleware.js";
-import validationMiddleware from "../Middlewares/validationMiddleWare.js";
+import validationMiddleware from "../Middlewares/validationMiddleware.js";
 import { addToCartSchema, updateProductQuantitySchema, deleteProductInCartSchema } from "../Validations/cartValidation.js";
 import { addToCart, deleteCart, getCartSummary, updateProductQuantityInCart, deleteProductInCart } from "../Controllers/cart.controller.js";
 import { ROLES } from "../Constants/roles.js";
