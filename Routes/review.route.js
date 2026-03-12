@@ -3,12 +3,12 @@ import  {list_user_reviews,createReview , updateReview,deleteReview} from "../Co
 import { isauthenticated } from "../Middlewares/authenticationMiddleware.js";
 import { authorizationMiddleware } from "../Middlewares/autorizationMiddleware.js";
 import validationMiddleware from "../Middlewares/validationMiddleware.js";
-import { reviewValidationSchema } from "../Validations/reviewValidation.js";
+import { createReviewSchema ,updateReviewSchema } from "../Validations/reviewValidation.js";
 import { ROLES } from "../Constants/roles.js";
 
 let reviewRoutes = new Router() ;
-reviewRoutes.post("/createReview" ,validationMiddleware(reviewValidationSchema) , isauthenticated ,authorizationMiddleware(ROLES.CUSTOMER),createReview) ;
-reviewRoutes.get("/myReviews" , isauthenticated ,authorizationMiddleware(ROLES.CUSTOMER),list_user_reviews) ;
+reviewRoutes.post("/createReview" ,validationMiddleware(createReviewSchema) , isauthenticated ,authorizationMiddleware(ROLES.CUSTOMER),createReview) ;
+reviewRoutes.get("/myReviews" , isauthenticated ,authorizationMiddleware(ROLES.CUSTOMER),validationMiddleware(updateReviewSchema),list_user_reviews) ;
 reviewRoutes.put("/updateReview/:id" ,isauthenticated ,authorizationMiddleware(ROLES.CUSTOMER),updateReview) ; //put validation (mustafa)
 reviewRoutes.delete("/deleteReview/:id" , isauthenticated ,authorizationMiddleware(ROLES.CUSTOMER),deleteReview) //put validation (mustafa)
 export default reviewRoutes
