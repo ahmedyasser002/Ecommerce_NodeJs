@@ -1,5 +1,7 @@
 import asyncHandler from "../Middlewares/asyncHandler.js"
 import { productModel } from "../Models/Product.js"
+import { userModel } from "../Models/User.js"
+
 import AppError from "../Utils/AppError.js";
 import { getPagination } from "../Utils/pagination.js";
 import { validateObjectId } from "../Utils/validators.js";
@@ -21,7 +23,33 @@ const getAllProducts = asyncHandler(
     async(req,res)=>{
     
     const { page , limit , skip } = getPagination(req);
-    const products = await productModel.find()
+    const { name, category, minPrice, maxPrice, sellerName } = req.query;
+    const query = {};
+
+    if (name) {
+        query.name = { $regex: name, $options: "i" };
+    }
+
+    if (category) {
+        query.category = category;
+    }
+
+    if (minPrice || maxPrice) {
+        query.price = {};
+
+        if (minPrice) query.price.$gte = minPrice;
+        if (maxPrice) query.price.$lte = maxPrice;
+    }
+
+    if (sellerName) {
+    const sellers = await userModel
+      .find({ role: "seller", name: { $regex: sellerName, $options: "i" } })
+      .select("_id");
+
+    query.seller = { $in: sellers.map((s) => s._id) };
+  }
+    const products = await productModel
+      .find(query)
       .skip(skip) 
       .limit(limit)
       .sort({ createdAt: -1 })
@@ -30,7 +58,7 @@ const getAllProducts = asyncHandler(
 
 
     // Search about estimatedCountDocuments  
-    const totalDocuments = await productModel.countDocuments();
+    const totalDocuments = await productModel.countDocuments(query);
     
     res.status(200).json({
       page,
