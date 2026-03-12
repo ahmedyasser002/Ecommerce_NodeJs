@@ -1,14 +1,17 @@
 import reviewModel from "../Models/Review.js"
 import asyncHandler from "../Middlewares/asyncHandler.js"
 
-let list_user_reviews =asyncHandler( async (req,res)=>{
-    let reviews = await reviewModel.find().populate("createdBy" , "name").populate("product_id" , "name") ;
-    if(reviews.length === 0){
-       return res.json({message : "no reviews found for this user"})
+ const list_user_reviews = asyncHandler(async (req, res) => {
+
+    let reviews = await reviewModel
+        .find({ createdBy: req.user._id }).select("content rating product_id").populate("product_id", "name");
+    if (reviews.length === 0) {
+        return res.json({ message: "no reviews found for this user" });
     }
-    res.status(200).json({reviews}) ;
-}
-)
+
+    res.status(200).json({ reviews });
+
+});
 
 let createReview = asyncHandler (async(req,res)=>{
     req.body.createdBy = req.user._id ;
@@ -21,7 +24,7 @@ let createReview = asyncHandler (async(req,res)=>{
 
 let deleteReview =asyncHandler( async(req,res)=>{
     let id = req.params.id ;
-    let deletedReview = await reviewModel.findByIdAndDelete({
+    let deletedReview = await reviewModel.findOneAndDelete({
         _id:id ,
         createdBy:req.user._id
     });
@@ -44,7 +47,7 @@ let updateReview = asyncHandler(async (req, res) => {
 
     if (review.createdBy.equals(req.user._id)) {
 
-        let updatedReview = await reviewModel.findByIdAndUpdate(id,req.body,{ new: true });
+        let updatedReview = await reviewModel.findOneAndUpdate({_id:id , createdBy:req.user._id},req.body,{ new: true });
 
         return res.json({ message: "Review updated",data: updatedReview});
     }
