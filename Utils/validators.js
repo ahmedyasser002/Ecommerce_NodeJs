@@ -6,3 +6,8 @@ export const objectIdValidator = (value, helpers) => {
   }
   return value;
 };
+
+
+export const validateObjectId = (id) => {
+  return mongoose.Types.ObjectId.isValid(id);
+};

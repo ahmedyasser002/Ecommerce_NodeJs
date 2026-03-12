@@ -6,6 +6,9 @@ export const globalError = (err, req, res, next) => {
     const key = Object.keys(err.keyValue)[0];
     err = new AppError(`Duplicate ${key} value`, 400);
   }
+  else if (err.name === "CastError" && err.kind === "ObjectId") {
+    err = new AppError("Invalid Product ID", 400);
+  }
   res.status(err.statusCode || 500).json({
     success: false,
     message: err.message || "Internal Server Error",

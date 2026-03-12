@@ -2,7 +2,7 @@ import asyncHandler from "../Middlewares/asyncHandler.js"
 import { productModel } from "../Models/Product.js"
 import AppError from "../Utils/AppError.js";
 import { getPagination } from "../Utils/pagination.js";
-import { objectIdValidator } from "../Utils/validators.js";
+import { validateObjectId } from "../Utils/validators.js";
 
 const addProduct = asyncHandler(
     async(req,res) =>{
@@ -74,9 +74,7 @@ const getSellerProducts = asyncHandler(
 const updateSellerProduct = asyncHandler(
     async(req,res)=>{
         const productID = req.params.id;
-         if (!objectIdValidator(productID)) {
-            throw new AppError("Invalid Product ID", 400);
-        }
+        // The validation on ID is being checked in the checkProductOwner Middleware
         const updatedProduct = await productModel.findByIdAndUpdate(productID, req.body, {new:true,runValidators: true
         });
         if(!updatedProduct){
@@ -88,6 +86,7 @@ const updateSellerProduct = asyncHandler(
 
     }
 )
+
 
 
 
