@@ -76,10 +76,30 @@ const getSellerProducts = asyncHandler(
 
         const { page , limit , skip } = getPagination(req);
         const seller = req.user._id;
+        const { name, category, minPrice, maxPrice } = req.query;
+        const query = { seller };
+        if (name) {
+            query.name = { $regex: name, $options: "i" };
+        }
+
+        if (category) {
+            query.category = category;
+        }
+
+        if (minPrice || maxPrice) {
+            query.price = {};
+            if (minPrice) query.price.$gte = Number(minPrice);
+            if (maxPrice) query.price.$lte = Number(maxPrice);
+        }
+
+
+
+
         const totalDocuments = await productModel.countDocuments({ seller });
 
 
-        const products = await productModel.find({ seller })
+        const products = await productModel
+            .find(query)
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
