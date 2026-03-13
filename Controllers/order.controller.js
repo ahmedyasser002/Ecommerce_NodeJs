@@ -103,4 +103,31 @@ const createOrder = asyncHandler(async (req,res)=>{
 
 })
 
-export { createOrder };
+const getCustomerOrders = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10, status } = req.query;
+  const skip = (page - 1) * limit;
+
+  const filter = { user: req.user._id };
+  if (status) {
+    filter.status = status;
+  }
+
+  const totalDocuments = await orderModel.countDocuments(filter);
+  const orders = await orderModel
+    .find(filter)
+    .populate("products.product", "name price images")
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(Number(limit));
+
+  res.status(200).json({
+    success: true,
+    page: Number(page),
+    limit: Number(limit),
+    totalDocuments,
+    totalPages: Math.ceil(totalDocuments / limit),
+    data: orders
+  });
+});
+
+export { createOrder, getCustomerOrders };
