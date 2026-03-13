@@ -67,7 +67,7 @@ const userScheme = new mongoose.Schema({
  address:{
     type:addressSchema,
     required:function(){
-      return this.role == "customer" || this.role =="seller"
+    return (this.role === "customer" || this.role === "seller") && !this.googleId
     }
  },
  isConfirmed:{
@@ -78,7 +78,11 @@ const userScheme = new mongoose.Schema({
  ,
  image:{
    type:String 
- }
+ },
+     googleId: {
+      type: String,
+      unique:true
+    }
 },
 {
  timestamps:true ,

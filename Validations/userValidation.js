@@ -59,7 +59,4 @@ export const signupValidation = Joi.object({
     otherwise: Joi.forbidden(), 
   }),
 })
-export const loginValidation= Joi.object({
-    email:attributes.email ,
-    password:attributes.password 
-})
+

@@ -1,6 +1,5 @@
 import express from "express";
 import dotenv from "dotenv";
-dotenv.config();
 import {globalError} from "./Middlewares/globalError.js"
 import cors from "cors";
 import connectDB from "./Config/db.config.js";
@@ -11,23 +10,37 @@ import reviewRoutes from "./Routes/review.route.js";
 import cartRoutes from "./Routes/cart.route.js";
 import userRoutes from "./Routes/user.route.js";
 import orderRoutes from "./Routes/order.route.js";
+import passport from "passport";
+import session from "express-session";
+import { setupPassport } from "./Config/passport.config.js";
 
 const app = express();
-
 connectDB();
+dotenv.config();
+
+app.use(
+  session({
+    secret: "secret",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+setupPassport();
+
 
 app.use(cors());
 app.use(express.json());
 
-app.use("/category", categoryRoutes)
+app.use("/category", categoryRoutes);
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
 app.use("/reviews", reviewRoutes);
 app.use("/cart", cartRoutes);
 app.use("/user", userRoutes);
 app.use("/orders", orderRoutes);
-
-
 
 
 
@@ -38,6 +51,4 @@ app.get("/", (req, res) => {
 app.use(globalError);
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () =>
-  console.log(`Server running on port ${PORT}`)
-);
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
