@@ -1,16 +1,17 @@
 import express from "express";
+import dotenv from "dotenv";
+dotenv.config();
 import {globalError} from "./Middlewares/globalError.js"
 import cors from "cors";
 import connectDB from "./Config/db.config.js";
 import categoryRoutes from "./Routes/category.route.js";
-import dotenv from "dotenv";
 import authRoutes from "./Routes/auth.route.js";
 import productRoutes from "./Routes/product.route.js";
 import reviewRoutes from "./Routes/review.route.js";
 import cartRoutes from "./Routes/cart.route.js";
 import userRoutes from "./Routes/user.route.js";
+import orderRoutes from "./Routes/order.route.js";
 
-dotenv.config();
 const app = express();
 
 connectDB();
@@ -24,6 +25,8 @@ app.use("/products", productRoutes);
 app.use("/reviews", reviewRoutes);
 app.use("/cart", cartRoutes);
 app.use("/user", userRoutes);
+app.use("/orders", orderRoutes);
+
 
 
 
