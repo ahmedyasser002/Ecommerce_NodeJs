@@ -24,6 +24,11 @@ let signup = asyncHandler( async (req , res)=>{
 let signin = asyncHandler(async(req , res )=>{
     let founduser = req.founduser ;
     let ismatched = bcrypt.compareSync( req.body.password,founduser.password);
+     if (founduser.googleId) {
+             return res.status(400).json({
+             message: "This account was registered using Google login. Please login with Google."
+                 });
+            }
     if(ismatched){
         if(!founduser.isConfirmed){
              return res.status(401).json({message: "You cannot log in without verifying your email "})
@@ -57,6 +62,18 @@ let emailVerification = async (req,res)=>{
 
     })
 }
+const googleCallback = (req, res) => {
+  const token = jwt.sign(
+    {
+      id: req.user._id,
+      role: req.user.role,
+      email: req.user.email,
+    },
+    process.env.JWT_SECRET
+  );
+
+  res.json({message: "Google login success",token,user: req.user});
+};
 
 
-export {signup , signin ,emailVerification}
+export {signup , signin ,emailVerification,googleCallback}
