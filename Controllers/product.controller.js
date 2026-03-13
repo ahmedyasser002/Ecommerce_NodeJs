@@ -1,4 +1,5 @@
 import asyncHandler from "../Middlewares/asyncHandler.js"
+import { categoryModel } from "../Models/Category.js";
 import { productModel } from "../Models/Product.js"
 import { userModel } from "../Models/User.js"
 
@@ -7,9 +8,14 @@ import { getPagination } from "../Utils/pagination.js";
 import { validateObjectId } from "../Utils/validators.js";
 
 const addProduct = asyncHandler(
-    async(req,res) =>{
+    async (req, res) => {
 
         const user = req.user
+        const category = req.body.category
+        const categoryExists = await categoryModel.findById(category);
+        if (!categoryExists) {
+            throw new AppError("No Category with this id", 400)
+        }
         req.body.seller = user._id
         const newProduct = await productModel.create(req.body);
         res.status(201).json({ message: "Product Created", data: newProduct })
@@ -20,61 +26,61 @@ const addProduct = asyncHandler(
 )
 
 const getAllProducts = asyncHandler(
-    async(req,res)=>{
-    
-    const { page , limit , skip } = getPagination(req);
-    const { name, category, minPrice, maxPrice, sellerName } = req.query;
-    const query = {};
+    async (req, res) => {
 
-    if (name) {
-        query.name = { $regex: name, $options: "i" };
-    }
+        const { page, limit, skip } = getPagination(req);
+        const { name, category, minPrice, maxPrice, sellerName } = req.query;
+        const query = {};
 
-    if (category) {
-        query.category = category;
-    }
+        if (name) {
+            query.name = { $regex: name, $options: "i" };
+        }
 
-    if (minPrice || maxPrice) {
-        query.price = {};
+        if (category) {
+            query.category = category;
+        }
 
-        if (minPrice) query.price.$gte = minPrice;
-        if (maxPrice) query.price.$lte = maxPrice;
-    }
+        if (minPrice || maxPrice) {
+            query.price = {};
 
-    if (sellerName) {
-    const sellers = await userModel
-      .find({ role: "seller", name: { $regex: sellerName, $options: "i" } })
-      .select("_id");
+            if (minPrice) query.price.$gte = minPrice;
+            if (maxPrice) query.price.$lte = maxPrice;
+        }
 
-    query.seller = { $in: sellers.map((s) => s._id) };
-  }
-    const products = await productModel
-      .find(query)
-      .skip(skip) 
-      .limit(limit)
-      .sort({ createdAt: -1 })
-      .populate("category","name")
-      .populate("seller", "name")
+        if (sellerName) {
+            const sellers = await userModel
+                .find({ role: "seller", name: { $regex: sellerName, $options: "i" } })
+                .select("_id");
+
+            query.seller = { $in: sellers.map((s) => s._id) };
+        }
+        const products = await productModel
+            .find(query)
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .populate("category", "name")
+            .populate("seller", "name")
 
 
-    // Search about estimatedCountDocuments  
-    const totalDocuments = await productModel.countDocuments(query);
-    
-    res.status(200).json({
-      page,
-      limit,
-      totalDocuments,
-      totalPages: Math.ceil(totalDocuments / limit),
-      data:products
-    });
-  
+        // Search about estimatedCountDocuments  
+        const totalDocuments = await productModel.countDocuments(query);
+
+        res.status(200).json({
+            page,
+            limit,
+            totalDocuments,
+            totalPages: Math.ceil(totalDocuments / limit),
+            data: products
+        });
+
     }
 )
 
 const getSellerProducts = asyncHandler(
-    async(req,res)=>{
+    async (req, res) => {
 
-        const { page , limit , skip } = getPagination(req);
+        const { page, limit, skip } = getPagination(req);
         const seller = req.user._id;
         const { name, category, minPrice, maxPrice } = req.query;
         const query = { seller };
@@ -120,12 +126,13 @@ const getSellerProducts = asyncHandler(
 )
 
 const updateSellerProduct = asyncHandler(
-    async(req,res)=>{
+    async (req, res) => {
         const productID = req.params.id;
         // The validation on ID is being checked in the checkProductOwner Middleware
-        const updatedProduct = await productModel.findByIdAndUpdate(productID, req.body, {new:true,runValidators: true
+        const updatedProduct = await productModel.findByIdAndUpdate(productID, req.body, {
+            new: true, runValidators: true
         });
-        if(!updatedProduct){
+        if (!updatedProduct) {
             throw new AppError("Product not found", 404);
         }
 
@@ -136,11 +143,11 @@ const updateSellerProduct = asyncHandler(
 )
 
 const deleteSellerProduct = asyncHandler(
-    async(req,res)=>{
+    async (req, res) => {
         const productID = req.params.id;
 
         const deletedProduct = await productModel.findByIdAndDelete(productID)
-         if(!deletedProduct){
+        if (!deletedProduct) {
             throw new AppError("Product not found", 404);
         }
 
@@ -151,4 +158,4 @@ const deleteSellerProduct = asyncHandler(
 
 
 
-export { addProduct , getAllProducts, getSellerProducts, updateSellerProduct, deleteSellerProduct }
+export { addProduct, getAllProducts, getSellerProducts, updateSellerProduct, deleteSellerProduct }

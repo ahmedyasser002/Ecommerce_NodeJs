@@ -19,7 +19,7 @@ const orderSchema = new mongoose.Schema({
     promoCode: { type: String },
 
     products: {
-        types: [
+        type: [
             {
                 // Is it better to have snapshots of product attributes or to populate?
                 product: {

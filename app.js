@@ -1,21 +1,22 @@
 import express from "express";
-import {globalError } from "./Middlewares/globalError.js";
+import dotenv from "dotenv";
+import {globalError} from "./Middlewares/globalError.js"
 import cors from "cors";
 import connectDB from "./Config/db.config.js";
 import categoryRoutes from "./Routes/category.route.js";
-import dotenv from "dotenv";
 import authRoutes from "./Routes/auth.route.js";
 import productRoutes from "./Routes/product.route.js";
 import reviewRoutes from "./Routes/review.route.js";
 import cartRoutes from "./Routes/cart.route.js";
 import userRoutes from "./Routes/user.route.js";
+import orderRoutes from "./Routes/order.route.js";
 import passport from "passport";
 import session from "express-session";
 import { setupPassport } from "./Config/passport.config.js";
 
-dotenv.config();
 const app = express();
 connectDB();
+dotenv.config();
 
 app.use(
   session({
@@ -39,6 +40,10 @@ app.use("/products", productRoutes);
 app.use("/reviews", reviewRoutes);
 app.use("/cart", cartRoutes);
 app.use("/user", userRoutes);
+app.use("/orders", orderRoutes);
+
+
+
 app.get("/", (req, res) => {
   res.send("Ecommerce API Running");
 });

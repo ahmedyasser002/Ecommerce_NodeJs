@@ -4,7 +4,7 @@ import { orderModel } from "../Models/Order.js";
 import { productModel } from "../Models/Product.js";
 import AppError from "../Utils/AppError.js";
 
-const makeOrder = asyncHandler(async (req,res)=>{
+const createOrder = asyncHandler(async (req,res)=>{
 
     const session = await mongoose.startSession();
 
@@ -15,9 +15,6 @@ const makeOrder = asyncHandler(async (req,res)=>{
         const { products , paymentMethod , address } = req.body;
         const user = req.user;
 
-        if(!products || products.length === 0){
-            throw new AppError("Order must contain products",400)
-        }
 
         const orderProducts = [];
         let subtotal = 0;
@@ -41,7 +38,7 @@ const makeOrder = asyncHandler(async (req,res)=>{
             )
 
             if(!product){
-                throw new AppError("Not enough stock",400)
+                throw new AppError("Product Not Available",400)
             }
 
             const itemPrice = product.price * quantity;
@@ -66,7 +63,7 @@ const makeOrder = asyncHandler(async (req,res)=>{
         const totalPrice = subtotal - discount + shipping;
 
 
-        const order = await orderModel.create([{
+        const [order] = await orderModel.create([{
 
             user: user._id,
             products: orderProducts,
@@ -88,7 +85,7 @@ const makeOrder = asyncHandler(async (req,res)=>{
 
         res.status(201).json({
             success:true,
-            order: order[0]
+            order: order
         })
 
     }
@@ -106,4 +103,4 @@ const makeOrder = asyncHandler(async (req,res)=>{
 
 })
 
-export default makeOrder;
+export { createOrder };
