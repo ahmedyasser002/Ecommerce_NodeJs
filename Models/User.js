@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
-const addressSchema = new mongoose.Schema({
+export const addressSchema = new mongoose.Schema({
    country: {
     type: String,
     maxlength: [50, "Country name cannot exceed 50 characters"],

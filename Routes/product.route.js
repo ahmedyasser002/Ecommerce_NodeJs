@@ -1,7 +1,7 @@
 import express from "express";
 import {isauthenticated }from "../Middlewares/authenticationMiddleware.js";
 import { authorizationMiddleware } from "../Middlewares/autorizationMiddleware.js";
-import { addProduct, getAllProducts, getSellerProducts, updateSellerProduct } from "../Controllers/product.controller.js";
+import { addProduct, deleteSellerProduct, getAllProducts, getSellerProducts, updateSellerProduct } from "../Controllers/product.controller.js";
 import { ROLES } from "../Constants/roles.js";
 import validationMiddleware from "../Middlewares/validationMiddleware.js";
 import { productSchemaValidation, productUpdateSchema } from "../Validations/productValidation.js";
@@ -20,6 +20,14 @@ productRoutes.patch(
    validationMiddleware(productUpdateSchema),
    updateSellerProduct
 );
+productRoutes.delete(
+   "/delete-seller-product/:id",
+   isauthenticated,
+   authorizationMiddleware(ROLES.SELLER),
+   checkProductOwner,
+   deleteSellerProduct
+);
+
 
 
 
