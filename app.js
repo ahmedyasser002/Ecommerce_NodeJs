@@ -13,11 +13,8 @@ import orderRoutes from "./Routes/order.route.js";
 import passport from "passport";
 import session from "express-session";
 import { setupPassport } from "./Config/passport.config.js";
-<<<<<<< HEAD
 import wishlistRoutes from "./Routes/wishlish.route.js";
-=======
 import couponRoutes from "./Routes/coupon.route.js";
->>>>>>> c99945b4854da0cd6d8e6dbc8583e931da3a889f
 
 const app = express();
 connectDB();
@@ -45,14 +42,11 @@ app.use("/products", productRoutes);
 app.use("/reviews", reviewRoutes);
 app.use("/cart", cartRoutes);
 app.use("/user", userRoutes);
-<<<<<<< HEAD
 app.use("/wishlist",wishlistRoutes)
-=======
 app.use("/orders", orderRoutes);
 app.use("/coupon", couponRoutes)
 
 
->>>>>>> c99945b4854da0cd6d8e6dbc8583e931da3a889f
 app.get("/", (req, res) => {
   res.send("Ecommerce API Running");
 });
