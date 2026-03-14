@@ -14,6 +14,7 @@ import passport from "passport";
 import session from "express-session";
 import { setupPassport } from "./Config/passport.config.js";
 import couponRoutes from "./Routes/coupon.route.js";
+import newsletterRoutes from "./Routes/newsletter.route.js";
 
 const app = express();
 connectDB();
@@ -43,7 +44,7 @@ app.use("/cart", cartRoutes);
 app.use("/user", userRoutes);
 app.use("/orders", orderRoutes);
 app.use("/coupon", couponRoutes)
-
+app.use("/newsletter", newsletterRoutes)
 
 
 
