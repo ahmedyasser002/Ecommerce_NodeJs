@@ -26,8 +26,6 @@ app.use("/cart", cartRoutes);
 app.use("/user", userRoutes);
 
 
-
-
 app.get("/", (req, res) => {
   res.send("Ecommerce API Running");
 });
