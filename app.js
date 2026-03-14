@@ -15,6 +15,9 @@ import session from "express-session";
 import { setupPassport } from "./Config/passport.config.js";
 import wishlistRoutes from "./Routes/wishlish.route.js";
 import couponRoutes from "./Routes/coupon.route.js";
+import newsletterRoutes from "./Routes/newsletter.route.js";
+import middleware from "i18next-http-middleware";
+import i18next from "./Config/i18n.js";
 
 const app = express();
 connectDB();
@@ -35,6 +38,7 @@ setupPassport();
 
 app.use(cors());
 app.use(express.json());
+app.use(middleware.handle(i18next))
 
 app.use("/category", categoryRoutes);
 app.use("/auth", authRoutes);
@@ -45,7 +49,7 @@ app.use("/user", userRoutes);
 app.use("/wishlist",wishlistRoutes)
 app.use("/orders", orderRoutes);
 app.use("/coupon", couponRoutes)
-
+app.use("/newsletter", newsletterRoutes)
 
 app.get("/", (req, res) => {
   res.send("Ecommerce API Running");

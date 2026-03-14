@@ -1,5 +1,6 @@
 import asyncHandler from "../Middlewares/asyncHandler.js";
 import { couponModel } from "../Models/Coupon.js";
+import reviewModel from "../Models/Review.js";
 
 const getCoupon = asyncHandler ( async (req, res) => {
     let allCoupons = await couponModel.find() 
@@ -23,19 +24,19 @@ const applyCoupon = asyncHandler (async (req,res) => {
     let discountAmount = 0
 
     if (!coupon)
-        res.status(404).json({ message: "coupon doesn't exist", error: error.message })
+        res.status(404).json({ message: req.t("coupon_not_found" )})
     
     if (!coupon.isActive)
-        res.status(404).json({ message: "coupon isn't active", error: error.message })
+        res.status(404).json({ message: req.t("coupon_inactive") })
 
     if(coupon.expiresAt < new Date())
-        res.status(404).json({ message: "coupon has expired", error: error.message })
+        res.status(404).json({ message: req.t("coupon_expired") })
 
     if(coupon.usedCount >= coupon.maxUses)
-        res.status(404).json({ message: "coupon reached its maximum uses    ", error: error.message })
+        res.status(404).json({ message: req.t("coupon_max_uses") })
 
     if(req.body.cartTotal < coupon.minOrderAmount)
-        res.status(404).json({ message: "Cart total is not enough to apply this coupon", error: error.message })
+        res.status(404).json({ message: req.t("coupon_low_cart") })
 
     if(coupon.discountType == "fixed"){
         discountAmount = coupon.discountValue
@@ -47,7 +48,7 @@ const applyCoupon = asyncHandler (async (req,res) => {
 
     await couponModel.findByIdAndUpdate(coupon._id, { $inc: {usedCount:1} })
 
-    res.status(200).json({ message: "Coupon applied", discountAmount, finalTotal})
+    res.status(200).json({ message: req.t("coupon_applied"), discountAmount, finalTotal})
     
 })
 
