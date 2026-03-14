@@ -4,7 +4,7 @@ import { orderModel } from "../Models/Order.js";
 import { productModel } from "../Models/Product.js";
 import AppError from "../Utils/AppError.js";
 
-const makeOrder = asyncHandler(async (req,res)=>{
+const createOrder = asyncHandler(async (req,res)=>{
 
     const session = await mongoose.startSession();
 
@@ -15,9 +15,6 @@ const makeOrder = asyncHandler(async (req,res)=>{
         const { products , paymentMethod , address } = req.body;
         const user = req.user;
 
-        if(!products || products.length === 0){
-            throw new AppError("Order must contain products",400)
-        }
 
         const orderProducts = [];
         let subtotal = 0;
@@ -41,7 +38,7 @@ const makeOrder = asyncHandler(async (req,res)=>{
             )
 
             if(!product){
-                throw new AppError("Not enough stock",400)
+                throw new AppError("Product Not Available",400)
             }
 
             const itemPrice = product.price * quantity;
@@ -66,7 +63,7 @@ const makeOrder = asyncHandler(async (req,res)=>{
         const totalPrice = subtotal - discount + shipping;
 
 
-        const order = await orderModel.create([{
+        const [order] = await orderModel.create([{
 
             user: user._id,
             products: orderProducts,
@@ -88,7 +85,7 @@ const makeOrder = asyncHandler(async (req,res)=>{
 
         res.status(201).json({
             success:true,
-            order: order[0]
+            order: order
         })
 
     }
@@ -106,4 +103,31 @@ const makeOrder = asyncHandler(async (req,res)=>{
 
 })
 
-export default makeOrder;
+const getCustomerOrders = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10, status } = req.query;
+  const skip = (page - 1) * limit;
+
+  const filter = { user: req.user._id };
+  if (status) {
+    filter.status = status;
+  }
+
+  const totalDocuments = await orderModel.countDocuments(filter);
+  const orders = await orderModel
+    .find(filter)
+    .populate("products.product", "name price images")
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(Number(limit));
+
+  res.status(200).json({
+    success: true,
+    page: Number(page),
+    limit: Number(limit),
+    totalDocuments,
+    totalPages: Math.ceil(totalDocuments / limit),
+    data: orders
+  });
+});
+
+export { createOrder, getCustomerOrders };
