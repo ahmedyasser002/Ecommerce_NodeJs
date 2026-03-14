@@ -45,8 +45,6 @@ app.use("/orders", orderRoutes);
 app.use("/coupon", couponRoutes)
 
 
-
-
 app.get("/", (req, res) => {
   res.send("Ecommerce API Running");
 });
