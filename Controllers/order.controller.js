@@ -3,25 +3,26 @@ import asyncHandler from "../Middlewares/asyncHandler.js";
 import { orderModel } from "../Models/Order.js";
 import { productModel } from "../Models/Product.js";
 import AppError from "../Utils/AppError.js";
+import { buildOrderFilter } from "../Utils/orderFilter.js";
 
-const createOrder = asyncHandler(async (req,res)=>{
+const createOrder = asyncHandler(async (req, res) => {
 
     const session = await mongoose.startSession();
 
-    try{
+    try {
 
         session.startTransaction();
 
-        const { products , paymentMethod , address } = req.body;
+        const { products, paymentMethod, address } = req.body;
         const user = req.user;
 
 
         const orderProducts = [];
         let subtotal = 0;
 
-        for(const item of products){
+        for (const item of products) {
 
-            const { productId , quantity } = item;
+            const { productId, quantity } = item;
 
             const product = await productModel.findOneAndUpdate(
                 {
@@ -32,13 +33,13 @@ const createOrder = asyncHandler(async (req,res)=>{
                     $inc: { stock: -quantity }
                 },
                 {
-                    new:true,
+                    new: true,
                     session
                 }
             )
 
-            if(!product){
-                throw new AppError("Product Not Available",400)
+            if (!product) {
+                throw new AppError("Product Not Available", 400)
             }
 
             const itemPrice = product.price * quantity;
@@ -55,7 +56,7 @@ const createOrder = asyncHandler(async (req,res)=>{
 
         }
 
-        
+
         // Change this discount later after applying promo
         const discount = 0;
         const shipping = 20;
@@ -79,23 +80,23 @@ const createOrder = asyncHandler(async (req,res)=>{
 
             address
 
-        }],{ session })
+        }], { session })
 
         await session.commitTransaction();
 
         res.status(201).json({
-            success:true,
+            success: true,
             order: order
         })
 
     }
-    catch(err){
+    catch (err) {
 
         await session.abortTransaction();
         throw err;
 
     }
-    finally{
+    finally {
 
         session.endSession();
 
@@ -104,57 +105,103 @@ const createOrder = asyncHandler(async (req,res)=>{
 })
 
 const getCustomerOrders = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, status } = req.query;
-  const skip = (page - 1) * limit;
+    const page = Number(req.query.page) || 1;
+    const limit = Math.min(Number(req.query.limit) || 10, 100);
+    const skip = (page - 1) * limit;
 
-  const filter = { user: req.user._id };
-  if (status) {
-    filter.status = status;
-  }
+    const filter = buildOrderFilter(req.query,req.user,"customer");
 
-  const totalDocuments = await orderModel.countDocuments(filter);
-  const orders = await orderModel
-    .find(filter)
-    .populate("products.product", "name price images")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(Number(limit));
+    const totalDocuments = await orderModel.countDocuments(filter);
+    const orders = await orderModel
+        .find(filter)
+        .populate("products.product", "name price images")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit))
+        .lean();
 
-  res.status(200).json({
-    success: true,
-    page: Number(page),
-    limit: Number(limit),
-    totalDocuments,
-    totalPages: Math.ceil(totalDocuments / limit),
-    data: orders
-  });
+    res.status(200).json({
+        success: true,
+        page: Number(page),
+        limit: Number(limit),
+        totalDocuments,
+        totalPages: Math.ceil(totalDocuments / limit),
+        data: orders
+    });
 });
 
 const getSellerOrders = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, status } = req.query;
-  const skip = (page - 1) * limit;
+    // const { page = 1, limit = 10, } = req.query;
+    const page = Number(req.query.page) || 1;
+    const limit = Math.min(Number(req.query.limit) || 10, 100);
+    const skip = (page - 1) * limit;
+  
 
-  const filter = { "products.seller": req.user._id };
-  if (status) {
-    filter.status = status
-  };
+    const filter = buildOrderFilter(req.query,req.user,"seller");
 
-  const totalDocuments = await orderModel.countDocuments(filter);
-  const orders = await orderModel
+    const totalDocuments = await orderModel.countDocuments(filter);
+    const orders = await orderModel
     .find(filter)
     .populate("products.product", "name price images")
     .sort({ createdAt: -1 })
     .skip(skip)
-    .limit(Number(limit));
-
-  res.status(200).json({
-    success: true,
-    page: Number(page),
-    limit: Number(limit),
-    totalDocuments,
-    totalPages: Math.ceil(totalDocuments / limit),
-    data: orders
-  });
+    .limit(Number(limit))
+    .lean();
+    
+    // Could be done with aggregation
+    orders.forEach(order => {
+    order.products = order.products.filter(p => p.seller.toString() === req.user._id.toString());
+});
+    res.status(200).json({
+        success: true,
+        page: Number(page),
+        limit: Number(limit),
+        totalDocuments,
+        totalPages: Math.ceil(totalDocuments / limit),
+        data: orders
+    });
 });
 
-export { createOrder, getCustomerOrders, getSellerOrders };
+
+const getAdminOrders = asyncHandler(async (req, res) => {
+    const page = Number(req.query.page) || 1;
+    const limit = Math.min(Number(req.query.limit) || 10, 100);
+    const skip = (page - 1) * limit;
+
+    const filter = buildOrderFilter(req.query,req.user,"admin");
+
+    const totalDocuments = await orderModel.countDocuments(filter);
+    const orders = await orderModel
+        .find(filter)
+        .populate("products.product", "name price images")
+        .populate("user", "name email")
+        .populate("products.seller", "name")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit))
+        .lean();
+
+    res.status(200).json({
+        success: true,
+        page: Number(page),
+        limit: Number(limit),
+        totalDocuments,
+        totalPages: Math.ceil(totalDocuments / limit),
+        data: orders
+    });
+});
+
+const getOrderById = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const order = await orderModel
+        .findById(id)
+        .populate("products.product", "name price images")
+        .populate("user", "name email")
+        .populate("products.seller", "name");
+
+    if (!order) throw new AppError("Order not found", 404);
+
+    res.status(200).json({ success: true, order });
+});
+export { createOrder, getCustomerOrders, getSellerOrders, getAdminOrders, getOrderById };
