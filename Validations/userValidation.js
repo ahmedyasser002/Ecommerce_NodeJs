@@ -47,6 +47,44 @@ const attributes  ={
 
 }
 
+const attributesForProfile  ={
+    phone :Joi.string().pattern(new RegExp('^01[0125][0-9]{8}$')).messages({
+        "string.pattern.base":"phone must match egyption phone patterns" 
+    }) ,
+    password:Joi.string().pattern(new RegExp('^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,16}$')).messages({
+        "string.pattern.base":"Password must contain at least one uppercase letter, one lowercase letter, and one number" ,
+        "string.empty":"password is required"
+    }) ,
+
+    address:Joi.object({
+        street:Joi.string().max(100).min(5).messages({
+             "string.min":"street length must be greater than or equal to 5",
+              "string.max":"street length must be less than or equal to 100 ",
+            "string.empty":"street is required"
+
+               }),
+        country:Joi.string().min(3).max(30).messages({
+              "string.min":"country length must be greater than or equal to 3",
+              "string.max":"country length must be less than or equal to 30 ",
+              "string.empty":"country is required"
+
+        }),
+        apartment_details:Joi.string().max(100).min(3).messages({
+             "string.min":"apartment_details length must be greater than or equal to 3",
+              "string.max":"apartment_details length must be less than or equal to 100 ",
+                      "string.empty":"apartment_details is required"
+
+        }),
+        city:Joi.string().min(3).max(30).messages({
+            "string.min":"city length must be greater than or equal to 3",
+            "string.max":"city length must be less than or equal to 30 ",
+            "string.empty":"city is required"
+
+        })
+        }).unknown(false)
+
+}
+
 export const signupValidation = Joi.object({
     email:attributes.email , 
     password:attributes.password ,
@@ -60,15 +98,9 @@ export const signupValidation = Joi.object({
   }),
 })
 
-// export const userManagementValidation = Joi.object({
-//     password:attributes.password ,
-//     phone:attributes.phone,
-//     address: attributes.address.when("role", {
-//     is: Joi.valid("customer", "seller"),
-//     then: attributes.address.required(),
-//     otherwise: Joi.forbidden(),
-//       }),
+export const userManagementValidation = Joi.object({
+    password:attributesForProfile.password ,
+    phone:attributesForProfile.phone,
+    address: attributesForProfile.address
 
-
-
-// })
+})
