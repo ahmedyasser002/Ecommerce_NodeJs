@@ -4,6 +4,7 @@ import { orderModel } from "../Models/Order.js";
 import { productModel } from "../Models/Product.js";
 import AppError from "../Utils/AppError.js";
 import { buildOrderFilter } from "../Utils/orderFilter.js";
+import { validateObjectId } from "../Utils/validators.js";
 
 const createOrder = asyncHandler(async (req, res) => {
 
@@ -30,6 +31,7 @@ const createOrder = asyncHandler(async (req, res) => {
                     stock: { $gte: quantity }
                 },
                 {
+                    // For atomicity
                     $inc: { stock: -quantity }
                 },
                 {
@@ -149,6 +151,7 @@ const getSellerOrders = asyncHandler(async (req, res) => {
     .lean();
     
     // Could be done with aggregation
+    // Did this because the .find(filter) will get the all products in order if only one item is owned by that seller, but now we display only the products of the seller from each order
     orders.forEach(order => {
     order.products = order.products.filter(p => p.seller.toString() === req.user._id.toString());
 });
@@ -193,6 +196,9 @@ const getAdminOrders = asyncHandler(async (req, res) => {
 
 const getOrderById = asyncHandler(async (req, res) => {
     const { id } = req.params;
+    if(!validateObjectId(id)){
+        throw new AppError("Invalid ID", 400)
+    }
 
     const order = await orderModel
         .findById(id)
