@@ -9,6 +9,7 @@ import productRoutes from "./Routes/product.route.js";
 import reviewRoutes from "./Routes/review.route.js";
 import cartRoutes from "./Routes/cart.route.js";
 import userRoutes from "./Routes/user.route.js";
+import couponRoutes from "./Routes/coupon.route.js";
 
 dotenv.config();
 const app = express();
@@ -24,7 +25,7 @@ app.use("/products", productRoutes);
 app.use("/reviews", reviewRoutes);
 app.use("/cart", cartRoutes);
 app.use("/user", userRoutes);
-
+app.use("/coupon", couponRoutes)
 
 
 
