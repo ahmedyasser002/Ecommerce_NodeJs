@@ -43,8 +43,13 @@ const getAllProducts = asyncHandler(
         if (minPrice || maxPrice) {
             query.price = {};
 
-            if (minPrice) query.price.$gte = minPrice;
-            if (maxPrice) query.price.$lte = maxPrice;
+            if (minPrice) {
+                query.price.$gte = minPrice;
+            }
+            if (maxPrice) 
+                {
+                    query.price.$lte = maxPrice;
+                }
         }
 
         if (sellerName) {
