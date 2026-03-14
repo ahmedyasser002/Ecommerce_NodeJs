@@ -60,3 +60,15 @@ export const signupValidation = Joi.object({
   }),
 })
 
+// export const userManagementValidation = Joi.object({
+//     password:attributes.password ,
+//     phone:attributes.phone,
+//     address: attributes.address.when("role", {
+//     is: Joi.valid("customer", "seller"),
+//     then: attributes.address.required(),
+//     otherwise: Joi.forbidden(),
+//       }),
+
+
+
+// })

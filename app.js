@@ -13,6 +13,7 @@ import orderRoutes from "./Routes/order.route.js";
 import passport from "passport";
 import session from "express-session";
 import { setupPassport } from "./Config/passport.config.js";
+import wishlistRoutes from "./Routes/wishlish.route.js";
 import couponRoutes from "./Routes/coupon.route.js";
 
 const app = express();
@@ -41,6 +42,7 @@ app.use("/products", productRoutes);
 app.use("/reviews", reviewRoutes);
 app.use("/cart", cartRoutes);
 app.use("/user", userRoutes);
+app.use("/wishlist",wishlistRoutes)
 app.use("/orders", orderRoutes);
 app.use("/coupon", couponRoutes)
 
