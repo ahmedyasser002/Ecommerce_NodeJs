@@ -15,6 +15,7 @@ import session from "express-session";
 import { setupPassport } from "./Config/passport.config.js";
 import wishlistRoutes from "./Routes/wishlish.route.js";
 import couponRoutes from "./Routes/coupon.route.js";
+import newsletterRoutes from "./Routes/newsletter.route.js";
 
 const app = express();
 connectDB();
@@ -45,7 +46,7 @@ app.use("/user", userRoutes);
 app.use("/wishlist",wishlistRoutes)
 app.use("/orders", orderRoutes);
 app.use("/coupon", couponRoutes)
-
+app.use("/newsletter", newsletterRoutes)
 
 app.get("/", (req, res) => {
   res.send("Ecommerce API Running");

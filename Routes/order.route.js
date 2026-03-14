@@ -1,6 +1,6 @@
 import express from "express";
 import { isauthenticated } from "../Middlewares/authenticationMiddleware.js";
-import validationMiddleware from "../Middlewares/ValidationMiddleWare.js";
+import validationMiddleware from "../Middlewares/validationMiddleware.js";
 import { createOrderSchema } from "../Validations/createOrderValidation.js";
 import { createOrder, getAdminOrders, getCustomerOrders, getOrderById, getSellerOrders } from "../Controllers/order.controller.js";
 import { ROLES } from "../Constants/roles.js";
