@@ -24,3 +24,16 @@ export const createOrderSchema = Joi.object({
     }).required()
 
 })
+
+export const orderUpdateSchema = Joi.object({
+    status: Joi.string().valid("pending", "confirmed", "shipped", "delivered", "cancelled"),
+    paymentStatus: Joi.string().valid("pending", "paid", "failed", "refunded"),
+    paymentMethod: Joi.string().valid("card", "cash_on_delivery", "wallet"),
+    address: Joi.object({
+        country: Joi.string().max(50),
+        city: Joi.string().max(50),
+        street: Joi.string().max(100),
+        apartment_details: Joi.string().max(50).optional()
+    }),
+    coupon: Joi.string().custom(objectIdValidator, "ObjectId validation")
+}).min(1);
