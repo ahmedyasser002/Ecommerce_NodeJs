@@ -5,6 +5,7 @@ import { productModel } from "../Models/Product.js";
 import AppError from "../Utils/AppError.js";
 import { buildOrderFilter } from "../Utils/orderFilter.js";
 import { validateObjectId } from "../Utils/validators.js";
+import { couponModel } from "../Models/Coupon.js";
 
 const createOrder = asyncHandler(async (req, res) => {
 
@@ -14,7 +15,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
         session.startTransaction();
 
-        const { products, paymentMethod, address } = req.body;
+        const { products, paymentMethod, address, couponCode } = req.body;
         const user = req.user;
 
 
@@ -59,8 +60,27 @@ const createOrder = asyncHandler(async (req, res) => {
         }
 
 
-        // Change this discount later after applying promo
-        const discount = 0;
+        let discount = 0;
+        const coupon = await couponModel.findOne({ code: couponCode }).session(session);
+ 
+
+    if (coupon && coupon.isActive && coupon.expiresAt > new Date() && coupon.usedCount < coupon.maxUses && subtotal >= coupon.minOrderAmount) 
+        {
+
+        if (coupon.discountType === "fixed") {
+            discount = coupon.discountValue
+        }
+        else if (coupon.discountType === "percentage") {
+            discount = (subtotal * coupon.discountValue) / 100;
+        }
+
+        await couponModel.findOneAndUpdate(
+            { code: couponCode },
+            { $inc: { usedCount: 1 } },
+            { session }
+        );
+    }
+
         const shipping = 20;
 
         const totalPrice = subtotal - discount + shipping;
@@ -76,6 +96,13 @@ const createOrder = asyncHandler(async (req, res) => {
             shipping,
             totalPrice,
 
+            coupon: coupon? {
+                id: coupon._id,
+                code: coupon.code,
+                discountValue: coupon.discountValue
+
+            } : null,
+
             paymentMethod,
             paymentStatus: "pending",
             status: "pending",
@@ -83,6 +110,7 @@ const createOrder = asyncHandler(async (req, res) => {
             address
 
         }], { session })
+
 
         await session.commitTransaction();
 
@@ -111,7 +139,7 @@ const getCustomerOrders = asyncHandler(async (req, res) => {
     const limit = Math.min(Number(req.query.limit) || 10, 100);
     const skip = (page - 1) * limit;
 
-    const filter = buildOrderFilter(req.query,req.user,"customer");
+    const filter = buildOrderFilter(req.query, req.user, "customer");
 
     const totalDocuments = await orderModel.countDocuments(filter);
     const orders = await orderModel
@@ -137,24 +165,24 @@ const getSellerOrders = asyncHandler(async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = Math.min(Number(req.query.limit) || 10, 100);
     const skip = (page - 1) * limit;
-  
 
-    const filter = buildOrderFilter(req.query,req.user,"seller");
+
+    const filter = buildOrderFilter(req.query, req.user, "seller");
 
     const totalDocuments = await orderModel.countDocuments(filter);
     const orders = await orderModel
-    .find(filter)
-    .populate("products.product", "name price images")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(Number(limit))
-    .lean();
-    
+        .find(filter)
+        .populate("products.product", "name price images")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit))
+        .lean();
+
     // Could be done with aggregation
     // Did this because the .find(filter) will get the all products in order if only one item is owned by that seller, but now we display only the products of the seller from each order
     orders.forEach(order => {
-    order.products = order.products.filter(p => p.seller.toString() === req.user._id.toString());
-});
+        order.products = order.products.filter(p => p.seller.toString() === req.user._id.toString());
+    });
     res.status(200).json({
         success: true,
         page: Number(page),
@@ -171,7 +199,7 @@ const getAdminOrders = asyncHandler(async (req, res) => {
     const limit = Math.min(Number(req.query.limit) || 10, 100);
     const skip = (page - 1) * limit;
 
-    const filter = buildOrderFilter(req.query,req.user,"admin");
+    const filter = buildOrderFilter(req.query, req.user, "admin");
 
     const totalDocuments = await orderModel.countDocuments(filter);
     const orders = await orderModel
@@ -196,7 +224,7 @@ const getAdminOrders = asyncHandler(async (req, res) => {
 
 const getOrderById = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    if(!validateObjectId(id)){
+    if (!validateObjectId(id)) {
         throw new AppError("Invalid ID", 400)
     }
 

@@ -16,8 +16,6 @@ const orderSchema = new mongoose.Schema({
         required: true
     },
 
-    promoCode: { type: String },
-
     products: {
         type: [
             {
@@ -70,6 +68,12 @@ const orderSchema = new mongoose.Schema({
         type: addressSchema,
         required: true
     },
+
+  coupon: {
+    id: { type: mongoose.Schema.Types.ObjectId, ref: "Coupon" }, 
+    code: String,           
+    discountValue: Number   
+  },
 
 
 },
