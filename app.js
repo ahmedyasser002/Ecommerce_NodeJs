@@ -12,6 +12,7 @@ import userRoutes from "./Routes/user.route.js";
 import passport from "passport";
 import session from "express-session";
 import { setupPassport } from "./Config/passport.config.js";
+import wishlistRoutes from "./Routes/wishlish.route.js";
 
 dotenv.config();
 const app = express();
@@ -39,6 +40,7 @@ app.use("/products", productRoutes);
 app.use("/reviews", reviewRoutes);
 app.use("/cart", cartRoutes);
 app.use("/user", userRoutes);
+app.use("/wishlist",wishlistRoutes)
 app.get("/", (req, res) => {
   res.send("Ecommerce API Running");
 });
