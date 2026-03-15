@@ -19,10 +19,32 @@ import newsletterRoutes from "./Routes/newsletter.route.js";
 import paymentRoutes from "./Routes/payment.route.js";
 import middleware from "i18next-http-middleware";
 import i18next from "./Config/i18n.js";
+import http from "http";
+import { Server } from "socket.io";
 
 const app = express();
 connectDB();
 dotenv.config();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+
+  socket.on("joinOrderRoom", (orderId) => {
+    socket.join(orderId);
+    console.log(`Socket ${socket.id} joined room ${orderId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
+});
 
 app.use(
   session({
@@ -33,6 +55,7 @@ app.use(
   })
 );
 
+app.set("io", io);
 app.use(passport.initialize());
 app.use(passport.session());
 setupPassport();
@@ -41,7 +64,6 @@ setupPassport();
 app.use(cors());
 app.use(express.json());
 app.use(middleware.handle(i18next))
-
 app.use("/category", categoryRoutes);
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
@@ -61,4 +83,4 @@ app.get("/", (req, res) => {
 app.use(globalError);
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
