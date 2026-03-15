@@ -2,10 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Stripe Test Payment</title>
+    <title>Stripe Payment API</title>
     <script src="https://js.stripe.com/v3/"></script>
     <style>
-      /* Reset some defaults */
       * {
         box-sizing: border-box;
         margin: 0;
@@ -136,9 +135,15 @@
     </div>
 
     <script>
+      const token =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiY3VzdG9tZXIiLCJlbWFpbCI6ImQ0ZTVkNDIyNGVAZW1haWxheC5wcm8iLCJfaWQiOiI2OWI2OTJhZTE4ODNjMDJjNmJkM2E2ZDgiLCJpYXQiOjE3NzM1NzI4Nzl9.hNs8f1Rx0fgnziivyp6JXtrL3s97IVKPy3AXpzvYghI";
+      
+      const orderId = "69b7046acfdf6211e220c268";
+
       const stripe = Stripe(
         "pk_test_51TBBkg8rcCzMKzfvsOyoSC0zYbIFTlpbk4LLydEJOcdRWXEc2VxFMlhepyxAsDO0aSyo5x86G6bTJy8saIVSkKu9002dkRmFOq",
       );
+
       const elements = stripe.elements();
       const card = elements.create("card");
       card.mount("#card-element");
@@ -146,9 +151,6 @@
       const button = document.getElementById("pay-button");
       const messageDiv = document.getElementById("message");
 
-      // Example JWT token
-      const token =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiY3VzdG9tZXIiLCJlbWFpbCI6ImQ0ZTVkNDIyNGVAZW1haWxheC5wcm8iLCJfaWQiOiI2OWI2OTJhZTE4ODNjMDJjNmJkM2E2ZDgiLCJpYXQiOjE3NzM1NzI4Nzl9.hNs8f1Rx0fgnziivyp6JXtrL3s97IVKPy3AXpzvYghI";
       const savedCardsSection = document.getElementById("saved-cards-section");
       const newCardSection = document.getElementById("new-card-section");
       const savedCardsDropdown = document.getElementById(
@@ -236,7 +238,7 @@
             {
               method: "POST",
               headers: { "Content-Type": "application/json", token: token },
-              body: JSON.stringify({ paymentMethodId }),
+              body: JSON.stringify({ paymentMethodId, orderId }),
             },
           );
 

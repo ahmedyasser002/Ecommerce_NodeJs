@@ -2,12 +2,15 @@ import Stripe from "stripe";
 import asyncHandler from "../Middlewares/asyncHandler.js";
 import AppError from "../Utils/AppError.js";
 import { userModel } from "../Models/User.js";
+import { orderModel } from "../Models/Order.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const createPaymentIntent = asyncHandler(async (req, res, next) => {
-  const amount=10000;
-  const currency="usd";
+  const { orderId } = req.body;
+  const order = await orderModel.findById(orderId);
+  const amount = order.totalPrice * 100; // Convert to cents
+  const currency = "usd";
   const { paymentMethodId } = req.body;
   const userId = req.user?._id;
 
@@ -77,6 +80,14 @@ export const createPaymentIntent = asyncHandler(async (req, res, next) => {
         allow_redirects: "never" 
       }
     });
+
+    order.expiresAt = undefined;
+    order.paymentStatus = "paid";
+    order.paymentId = paymentIntent.id;
+    order.status = "confirmed";
+    order.paymentMethod = "card";
+    await order.save();
+
     res.status(200).json({
       success: true,
       clientSecret: paymentIntent.client_secret

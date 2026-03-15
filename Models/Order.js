@@ -44,6 +44,9 @@ const orderSchema = new mongoose.Schema({
                 price: {
                     type: Number,
                     required: true
+                },
+                paymentId: {
+                    type: String
                 }
             }
         ],
@@ -57,7 +60,8 @@ const orderSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ["card", "cash_on_delivery", "wallet"],
+        enum: ["card", "cash_on_delivery"],
+        default: "cash_on_delivery"
     },
     paymentStatus: {
         type: String,
@@ -74,7 +78,11 @@ const orderSchema = new mongoose.Schema({
     code: String,           
     discountValue: Number   
   },
-
+  expiresAt: {
+    type: Date,
+    default: () => new Date(Date.now() + 60 * 1000),
+    index: { expires: 0 }
+  }
 
 },
     {

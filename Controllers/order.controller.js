@@ -12,129 +12,103 @@ import { generateDeliveryPath } from "../Utils/delivery.js";
 
 const createOrder = asyncHandler(async (req, res) => {
 
-    const session = await mongoose.startSession();
+    const { products, paymentMethod, address, couponCode } = req.body;
+    const user = req.user;
 
-    try {
+    const orderProducts = [];
+    let subtotal = 0;
 
-        session.startTransaction();
+    for (const item of products) {
 
-        const { products, paymentMethod, address, couponCode } = req.body;
-        const user = req.user;
+        const { productId, quantity } = item;
 
-
-        const orderProducts = [];
-        let subtotal = 0;
-
-        for (const item of products) {
-
-            const { productId, quantity } = item;
-
-            const product = await productModel.findOneAndUpdate(
-                {
-                    _id: productId,
-                    stock: { $gte: quantity }
-                },
-                {
-                    // For atomicity
-                    $inc: { stock: -quantity }
-                },
-                {
-                    new: true,
-                    session
-                }
-            )
-
-            if (!product) {
-                throw new AppError("Product Not Available", 400)
+        const product = await productModel.findOneAndUpdate(
+            {
+                _id: productId,
+                stock: { $gte: quantity }
+            },
+            {
+                $inc: { stock: -quantity }
+            },
+            {
+                new: true
             }
+        );
 
-            const itemPrice = product.price * quantity;
-
-            subtotal += itemPrice;
-
-            orderProducts.push({
-                product: product._id,
-                seller: product.seller,
-                productName: product.name,
-                price: product.price,
-                quantity
-            })
-
+        if (!product) {
+            throw new AppError("Product Not Available", 400);
         }
 
+        const itemPrice = product.price * quantity;
+        subtotal += itemPrice;
 
-        let discount = 0;
-        const coupon = await couponModel.findOne({ code: couponCode }).session(session);
+        orderProducts.push({
+            product: product._id,
+            seller: product.seller,
+            productName: product.name,
+            price: product.price,
+            quantity
+        });
+    }
 
+    let discount = 0;
+    let coupon = null;
 
-        if (coupon && coupon.isActive && coupon.expiresAt > new Date() && coupon.usedCount < coupon.maxUses && subtotal >= coupon.minOrderAmount) {
+    if (couponCode) {
+        coupon = await couponModel.findOne({ code: couponCode });
+    }
 
-            if (coupon.discountType === "fixed") {
-                discount = coupon.discountValue
-            }
-            else if (coupon.discountType === "percentage") {
-                discount = (subtotal * coupon.discountValue) / 100;
-            }
+    if (
+        coupon &&
+        coupon.isActive &&
+        coupon.expiresAt > new Date() &&
+        coupon.usedCount < coupon.maxUses &&
+        subtotal >= coupon.minOrderAmount
+    ) {
 
-            await couponModel.findOneAndUpdate(
-                { code: couponCode },
-                { $inc: { usedCount: 1 } },
-                { session }
-            );
+        if (coupon.discountType === "fixed") {
+            discount = coupon.discountValue;
+        } else if (coupon.discountType === "percentage") {
+            discount = (subtotal * coupon.discountValue) / 100;
         }
 
-        const shipping = 20;
-
-        const totalPrice = subtotal - discount + shipping;
-
-
-        const [order] = await orderModel.create([{
-
-            user: user._id,
-            products: orderProducts,
-
-            subtotal,
-            discount,
-            shipping,
-            totalPrice,
-
-            coupon: coupon ? {
-                id: coupon._id,
-                code: coupon.code,
-                discountValue: coupon.discountValue
-
-            } : null,
-
-            paymentMethod,
-            paymentStatus: "pending",
-            status: "pending",
-
-            address
-
-        }], { session })
-
-
-        await session.commitTransaction();
-
-        res.status(201).json({
-            success: true,
-            order: order
-        })
-
-    }
-    catch (err) {
-
-        await session.abortTransaction();
-        throw err;
-
-    }
-    finally {
-
-        session.endSession();
-
+        await couponModel.findOneAndUpdate(
+            { code: couponCode },
+            { $inc: { usedCount: 1 } }
+        );
     }
 
-})
+    const shipping = 20;
+    const totalPrice = subtotal - discount + shipping;
+
+    const order = await orderModel.create({
+        user: user._id,
+        products: orderProducts,
+
+        subtotal,
+        discount,
+        shipping,
+        totalPrice,
+
+        coupon: coupon ? {
+            id: coupon._id,
+            code: coupon.code,
+            discountValue: coupon.discountValue
+        } : null,
+
+        paymentMethod,
+        paymentStatus: "pending",
+        status: "pending",
+
+        address
+    });
+
+    res.status(201).json({
+        success: true,
+        order
+    });
+
+});
 
 const getCustomerOrders = asyncHandler(async (req, res) => {
     const page = Number(req.query.page) || 1;
