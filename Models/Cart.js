@@ -14,6 +14,9 @@ const cartSchema = new mongoose.Schema(
           unique: true,
           sparse: true
         },
+        expiresAt: {
+          type: Date
+        },
         items: [
             {
                 product: {
@@ -39,8 +42,8 @@ const cartSchema = new mongoose.Schema(
             min: 0
         }
     },
-    { timestamps: true },
-    { versionKey: false }
+    { timestamps: true, versionKey: false }
 );
 
+cartSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); //TTL index to automatically delete expired carts
 export default mongoose.model("Cart", cartSchema);

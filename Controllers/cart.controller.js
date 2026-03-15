@@ -6,7 +6,7 @@ import AppError from "../Utils/AppError.js";
 
 const addToCart = asyncHandler(async (req, res, next) => {
     const { productId, quantity } = req.body;
-    const sessionId = req.headers.session_id;
+    const sessionId = req.sessionID;
     const userId = req.user?._id;
 
     let cart;
@@ -17,7 +17,7 @@ const addToCart = asyncHandler(async (req, res, next) => {
     } else if (sessionId) {
         // Guest cart
         cart = await Cart.findOne({ sessionId });
-        if (!cart) cart = new Cart({ sessionId, items: [] });
+        if (!cart) cart = new Cart({ sessionId,  expiresAt: new Date(Date.now() + 1000 * 60), items: [] });
     } else {
         throw new AppError("Missing sessionId for guest cart", 400);
     }
