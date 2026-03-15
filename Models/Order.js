@@ -82,4 +82,11 @@ const orderSchema = new mongoose.Schema({
     }
 );
 
+orderSchema.index({ user: 1, status: 1, createdAt: -1 }); 
+orderSchema.index({ "products.seller": 1, status: 1, createdAt: -1 });
+orderSchema.index({ status: 1, createdAt: -1 });
+
+
 export const orderModel = mongoose.model("Order", orderSchema)
+
+// Save Products , coupon id , address , payment method , status , total price, discount
