@@ -7,46 +7,34 @@ import { buildOrderFilter } from "../Utils/orderFilter.js";
 import { validateObjectId } from "../Utils/validators.js";
 import { couponModel } from "../Models/Coupon.js";
 import { generateDeliveryPath } from "../Utils/delivery.js";
-
-
+import Cart from "../Models/Cart.js";
 
 const createOrder = asyncHandler(async (req, res) => {
-
-    const { products, paymentMethod, address, couponCode } = req.body;
-    const user = req.user;
-
+    const userId = req.user._id;
     const orderProducts = [];
-    let subtotal = 0;
 
-    for (const item of products) {
+    const cart = await Cart.findOne({ user: userId });
 
-        const { productId, quantity } = item;
+    if (!cart || cart.items.length === 0) {
+        throw new AppError("Cart is empty", 400);
+    }
 
-        const product = await productModel.findOneAndUpdate(
-            {
-                _id: productId,
-                stock: { $gte: quantity }
-            },
-            {
-                $inc: { stock: -quantity }
-            },
-            {
-                new: true
-            }
-        );
+    const { address, couponCode } = req.body;
+    const totalPrice = cart.totalPrice;
 
-        if (!product) {
-            throw new AppError("Product Not Available", 400);
+    for (const item of cart.items) {
+        const { product, quantity } = item;
+        console.log(product, quantity);
+        const foundProduct = await productModel.findById(product);
+        if (!foundProduct) {
+            throw new AppError("Product is not available", 400);
         }
 
-        const itemPrice = product.price * quantity;
-        subtotal += itemPrice;
-
         orderProducts.push({
-            product: product._id,
-            seller: product.seller,
-            productName: product.name,
-            price: product.price,
+            product: foundProduct._id,
+            seller: foundProduct.seller,
+            productName: foundProduct.name,
+            price: foundProduct.price,
             quantity
         });
     }
@@ -63,13 +51,12 @@ const createOrder = asyncHandler(async (req, res) => {
         coupon.isActive &&
         coupon.expiresAt > new Date() &&
         coupon.usedCount < coupon.maxUses &&
-        subtotal >= coupon.minOrderAmount
+        totalPrice >= coupon.minOrderAmount
     ) {
-
         if (coupon.discountType === "fixed") {
             discount = coupon.discountValue;
         } else if (coupon.discountType === "percentage") {
-            discount = (subtotal * coupon.discountValue) / 100;
+            discount = (totalPrice * coupon.discountValue) / 100;
         }
 
         await couponModel.findOneAndUpdate(
@@ -79,35 +66,31 @@ const createOrder = asyncHandler(async (req, res) => {
     }
 
     const shipping = 20;
-    const totalPrice = subtotal - discount + shipping;
+    const finalPrice = totalPrice - discount + shipping;
 
     const order = await orderModel.create({
-        user: user._id,
+        user: userId,
         products: orderProducts,
 
-        subtotal,
+        subtotal: totalPrice,
         discount,
         shipping,
-        totalPrice,
+        totalPrice: finalPrice,
 
-        coupon: coupon ? {
-            id: coupon._id,
-            code: coupon.code,
-            discountValue: coupon.discountValue
-        } : null,
-
-        paymentMethod,
-        paymentStatus: "pending",
-        status: "pending",
+        coupon: coupon
+            ? {
+                  id: coupon._id,
+                  code: coupon.code,
+                  discountValue: coupon.discountValue
+              }
+            : null,
 
         address
     });
-
     res.status(201).json({
         success: true,
         order
     });
-
 });
 
 const getCustomerOrders = asyncHandler(async (req, res) => {

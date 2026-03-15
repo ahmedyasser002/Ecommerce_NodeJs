@@ -3,12 +3,20 @@ import asyncHandler from "../Middlewares/asyncHandler.js";
 import AppError from "../Utils/AppError.js";
 import { userModel } from "../Models/User.js";
 import { orderModel } from "../Models/Order.js";
+import Cart from "../Models/Cart.js";
+import { productModel } from "../Models/Product.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const createPaymentIntent = asyncHandler(async (req, res, next) => {
   const { orderId } = req.body;
   const order = await orderModel.findById(orderId);
+  if(!order) {
+    return next(new AppError("Order not found", 404));
+  }
+  if(order.paymentStatus === "paid") {
+    return next(new AppError("Order is already paid", 400));
+  }
   const amount = order.totalPrice * 100; // Convert to cents
   const currency = "usd";
   const { paymentMethodId } = req.body;
@@ -24,7 +32,7 @@ export const createPaymentIntent = asyncHandler(async (req, res, next) => {
     if (!stripeCustomerId) {
       const customer = await stripe.customers.create({
         email: user.email,
-        name: user.name
+        name: user.name,
       });
 
       stripeCustomerId = customer.id;
@@ -38,13 +46,13 @@ export const createPaymentIntent = asyncHandler(async (req, res, next) => {
     // 3️⃣ Attach if not attached
     if (!paymentMethod.customer) {
       await stripe.paymentMethods.attach(paymentMethodId, {
-        customer: stripeCustomerId
+        customer: stripeCustomerId,
       });
     }
 
     // 4️⃣ Save card metadata if not stored
     const existingCard = user.cards?.find(
-      (c) => c.stripePaymentMethodId === paymentMethodId
+      (c) => c.stripePaymentMethodId === paymentMethodId,
     );
 
     if (!existingCard) {
@@ -53,7 +61,7 @@ export const createPaymentIntent = asyncHandler(async (req, res, next) => {
         last4: paymentMethod.card.last4,
         brand: paymentMethod.card.brand,
         expMonth: paymentMethod.card.exp_month,
-        expYear: paymentMethod.card.exp_year
+        expYear: paymentMethod.card.exp_year,
       });
 
       await user.save();
@@ -62,8 +70,8 @@ export const createPaymentIntent = asyncHandler(async (req, res, next) => {
     // 5️⃣ Set default payment method
     await stripe.customers.update(stripeCustomerId, {
       invoice_settings: {
-        default_payment_method: paymentMethodId
-      }
+        default_payment_method: paymentMethodId,
+      },
     });
 
     // 6️⃣ Create PaymentIntent
@@ -75,10 +83,10 @@ export const createPaymentIntent = asyncHandler(async (req, res, next) => {
       confirm: true,
       setup_future_usage: "off_session",
       // This explicitly tells Stripe: "If they need a redirect, just fail the payment"
-      automatic_payment_methods: { 
-        enabled: true, 
-        allow_redirects: "never" 
-      }
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: "never",
+      },
     });
 
     order.expiresAt = undefined;
@@ -88,16 +96,35 @@ export const createPaymentIntent = asyncHandler(async (req, res, next) => {
     order.paymentMethod = "card";
     await order.save();
 
+    for (const item of order.products) {
+      const { product, quantity } = item;
+      const updatedProduct = await productModel.findOneAndUpdate(
+        {
+          _id: product,
+          stock: { $gte: quantity },
+        },
+        {
+          $inc: { stock: -quantity },
+        },
+        {
+          new: true,
+        },
+      );
+      if (!updatedProduct) {
+        throw new AppError("Product is not available", 400);
+      }
+    }
+
+    await Cart.findOneAndDelete({ user: userId });
+
     res.status(200).json({
       success: true,
-      clientSecret: paymentIntent.client_secret
+      clientSecret: paymentIntent.client_secret,
     });
-
   } catch (error) {
     next(new AppError(error.message || "Payment failed", 400));
   }
 });
-
 
 export const getSavedCards = asyncHandler(async (req, res, next) => {
   const user = await userModel.findById(req.user._id).select("cards");
@@ -108,6 +135,6 @@ export const getSavedCards = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    cards: user.cards || []
+    cards: user.cards || [],
   });
 });

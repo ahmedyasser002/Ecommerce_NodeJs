@@ -14,7 +14,7 @@ import { checkOrderAccess } from "../Middlewares/checkOrderAccess.js";
 
 
 const orderRoutes = express.Router()
-orderRoutes.post("/create-order", isauthenticated,authorizationMiddleware(ROLES.CUSTOMER) ,validationMiddleware(createOrderSchema), createOrder )
+orderRoutes.post("/create-order", isauthenticated,authorizationMiddleware(ROLES.CUSTOMER), createOrder )
 orderRoutes.get("/customer", isauthenticated,authorizationMiddleware(ROLES.CUSTOMER), getCustomerOrders )
 orderRoutes.get("/seller", isauthenticated, authorizationMiddleware(ROLES.SELLER), getSellerOrders)
 orderRoutes.get("/admin", isauthenticated, authorizationMiddleware(ROLES.ADMIN), getAdminOrders)
