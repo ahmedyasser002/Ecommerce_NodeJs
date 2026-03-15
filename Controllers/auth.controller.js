@@ -21,30 +21,35 @@ let signup = asyncHandler( async (req , res)=>{
 }
 )
 
-let signin = asyncHandler(async(req , res )=>{
-    let founduser = req.founduser ;
-    let ismatched = bcrypt.compareSync( req.body.password,founduser.password);
-     if (founduser.googleId) {
-             return res.status(400).json({
-             message: "This account was registered using Google login. Please login with Google."
-                 });
-            }
-    if(ismatched){
-        if(!founduser.isConfirmed){
-             return res.status(401).json({message: "You cannot log in without verifying your email "})
 
-        }
-        const secret_key = process.env.JWT_SECRET ;
-        let token  = jwt.sign({role:founduser.role , email:founduser.email , _id :founduser._id} , secret_key);
-        return res.json({message: "Hello", data: founduser, token: token})
-    }
-            res.status(422).json({message: "Invalid Password or Email"})
+let signin = asyncHandler(async (req, res) => {
+  let founduser = req.founduser;
+  if (founduser.provider === "google") {
+    return res.status(400).json({
+      message: "This account was registered using Google login. Please login with Google.",
+    });
+  }
+
+  const ismatched = await bcrypt.compare(req.body.password, founduser.password);
+
+  if (!ismatched) {
+    return res.status(422).json({ message: "Invalid Password or Email" });
+  }
+
+  if (!founduser.isConfirmed) {
+    return res.status(401).json({ message: "You cannot log in without verifying your email" });
+  }
+
+  const secret_key = process.env.JWT_SECRET;
+  const token = jwt.sign(
+    { role: founduser.role, email: founduser.email, _id: founduser._id },
+    secret_key  );
+
+  res.json({ message: "Hello", data: founduser, token: token });
+});
 
 
-}
-)
-
-let emailVerification = async (req,res)=>{
+let emailVerification =asyncHandler( async (req,res)=>{
     let email = req.params.email ;
     const email_signature = process.env.EMAIL_Token ;
     let verifiedEmail = jwt.verify(email,email_signature,async(err ,decoded)=>{
@@ -61,7 +66,7 @@ let emailVerification = async (req,res)=>{
         res.end(htmlContent);
 
     })
-}
+})
 const googleCallback = (req, res) => {
   const token = jwt.sign(
     {
@@ -69,10 +74,11 @@ const googleCallback = (req, res) => {
       role: req.user.role,
       email: req.user.email,
     },
-    process.env.JWT_SECRET
-  );
+    process.env.JWT_SECRET  );
 
-  res.json({message: "Google login success",token,user: req.user});
+  res.json({
+    message: "Google login success",token,user: req.user,
+  });
 };
 
 

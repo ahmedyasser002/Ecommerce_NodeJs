@@ -11,5 +11,5 @@ authRoutes.post("/signup",upload.single('image'),validationMiddleware(signupVali
 authRoutes.post("/signin" ,checkEmail ,signin )
 authRoutes.get("/verify/:email", emailVerification)
 authRoutes.get("/google",passport.authenticate("google", { scope: ["profile", "email"] }));
-authRoutes.get("/google/callback",passport.authenticate("google", { failureRedirect: "/auth/signin" }),googleCallback);
+authRoutes.get("/google/callback",passport.authenticate("google", { session: false }),googleCallback);
 export default authRoutes

@@ -15,22 +15,33 @@ export const setupPassport = () => {
           const email = profile.emails[0].value;
           let user = await userModel.findOne({ email });
 
-          if (!user) {
-            user = await userModel.create({
-              name: profile.displayName,
-              email: email,
-              password: "google-login",
-              isConfirmed: true,
-              image: profile.photos[0].value,
-              googleId: profile.id,
-              address: { country: "Unknown", city: "Unknown", street: "Unknown" } 
-            });
-          } else {
+          if (user) {
+            if (user.provider === "local") {
+              return done(null, false, {
+                message: "Please login using email and password",
+              });
+            }
+
             user.name = profile.displayName;
             user.image = profile.photos[0].value;
             user.googleId = profile.id;
             await user.save();
+            return done(null, user);
           }
+
+          user = await userModel.create({
+            name: profile.displayName,
+            email: email,
+            provider: "google",
+            isConfirmed: true,
+            image: profile.photos[0].value,
+            googleId: profile.id,
+            address: {
+              country: "Unknown",
+              city: "Unknown",
+              street: "Unknown",
+            },
+          });
 
           return done(null, user);
         } catch (error) {
@@ -42,7 +53,11 @@ export const setupPassport = () => {
 
   passport.serializeUser((user, done) => done(null, user._id));
   passport.deserializeUser(async (id, done) => {
-    const user = await userModel.findById(id);
-    done(null, user);
+    try {
+      const user = await userModel.findById(id);
+      done(null, user);
+    } catch (error) {
+      done(error, null);
+    }
   });
 };

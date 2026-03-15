@@ -20,15 +20,16 @@ export const addressSchema = new mongoose.Schema(
     },
     apartment_details: {
       type: String,
-      maxlength: [50, "apartment details cannot exceed 50 characters"],
+      maxlength: [50, "Apartment details cannot exceed 50 characters"],
       trim: true,
     },
   },
   {
     _id: false,
-  },
+  }
 );
-const userScheme = new mongoose.Schema(
+
+const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -48,20 +49,24 @@ const userScheme = new mongoose.Schema(
     phone: {
       type: String,
       trim: true,
-      match: [
-        /^01[0125][0-9]{8}$/,
-        "Please enter a valid Egyptian phone number",
-      ],
+      match: [/^01[0125][0-9]{8}$/, "Please enter a valid Egyptian phone number"],
     },
     password: {
       type: String,
-      required: true,
       minlength: [8, "Password must be at least 8 characters"],
+      required: function () {
+        return !this.googleId; // password required only if not google user
+      },
     },
     role: {
       type: String,
       enum: ["customer", "seller", "admin"],
       default: "customer",
+    },
+    provider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
     },
     address: {
       type: addressSchema,
@@ -80,13 +85,11 @@ const userScheme = new mongoose.Schema(
     },
     googleId: {
       type: String,
-      unique: true,
-    },
-
+      unique: true
+        },
     stripeCustomerId: {
       type: String,
     },
-
     cards: [
       {
         stripePaymentMethodId: String,
@@ -100,11 +103,14 @@ const userScheme = new mongoose.Schema(
   {
     timestamps: true,
     versionKey: false,
-  },
+  }
 );
 
-userScheme.pre("save", { document: true }, async function () {
+userSchema.pre("save", { document: true }, async function () {
+  if (!this.password) return;
   if (!this.isModified("password")) return;
+
   this.password = bcrypt.hashSync(this.password, 8);
 });
-export const userModel = mongoose.model("User", userScheme);
+
+export const userModel = mongoose.model("User", userSchema);
