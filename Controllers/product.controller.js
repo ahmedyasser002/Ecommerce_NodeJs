@@ -16,6 +16,9 @@ const addProduct = asyncHandler(
         if (!categoryExists) {
             throw new AppError("No Category with this id", 400)
         }
+        if (req.file) {
+        req.body.images = [req.file.filename];
+    }
         req.body.seller = user._id
         const newProduct = await productModel.create(req.body);
         res.status(201).json({ message: "Product Created", data: newProduct })
