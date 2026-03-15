@@ -16,6 +16,7 @@ import { setupPassport } from "./Config/passport.config.js";
 import wishlistRoutes from "./Routes/wishlish.route.js";
 import couponRoutes from "./Routes/coupon.route.js";
 import newsletterRoutes from "./Routes/newsletter.route.js";
+import paymentRoutes from "./Routes/payment.route.js";
 import middleware from "i18next-http-middleware";
 import i18next from "./Config/i18n.js";
 
@@ -46,6 +47,7 @@ app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
 app.use("/reviews", reviewRoutes);
 app.use("/cart", cartRoutes);
+app.use("/payment", paymentRoutes);
 app.use("/user", userRoutes);
 app.use("/wishlist",wishlistRoutes)
 app.use("/orders", orderRoutes);

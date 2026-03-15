@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Stripe Test Payment</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+      /* Reset some defaults */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #f0f2f5;
+        color: #333;
+      }
+
+      .container {
+        background: #fff;
+        padding: 40px 30px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        width: 400px;
+        text-align: center;
+      }
+
+      h2 {
+        margin-bottom: 25px;
+        color: #1a1a1a;
+        font-weight: 600;
+      }
+
+      #card-element {
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        transition: border 0.3s;
+      }
+
+      #card-element:focus-within {
+        border-color: #6772e5;
+      }
+
+      select {
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        margin-bottom: 15px;
+      }
+
+      a {
+        color: #6772e5;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      button {
+        width: 100%;
+        padding: 14px;
+        background-color: #6772e5;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background 0.3s;
+      }
+
+      button:hover {
+        background-color: #5469d4;
+      }
+
+      .message {
+        margin-top: 20px;
+        font-weight: 500;
+      }
+
+      .error {
+        color: #e74c3c;
+      }
+
+      .success {
+        color: #2ecc71;
+      }
+
+      .section {
+        margin-bottom: 20px;
+        text-align: left;
+      }
+
+      .section p {
+        margin-bottom: 8px;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Checkout</h2>
+
+      <!-- Saved cards -->
+      <div id="saved-cards-section" class="section" style="display: none">
+        <p>Use a saved card:</p>
+        <select id="saved-cards-dropdown"></select>
+        <div>
+          <a href="#" id="use-new-card">+ Use a new card</a>
+        </div>
+      </div>
+
+      <!-- New card -->
+      <div id="new-card-section" class="section">
+        <p>Enter card details:</p>
+        <div id="card-element"></div>
+        <div>
+          <a href="#" id="view-saved-cards" style="display: none"
+            >View saved cards</a
+          >
+        </div>
+      </div>
+
+      <button id="pay-button">Pay Now</button>
+      <div id="message" class="message"></div>
+    </div>
+
+    <script>
+      const stripe = Stripe(
+        "pk_test_51TBBkg8rcCzMKzfvsOyoSC0zYbIFTlpbk4LLydEJOcdRWXEc2VxFMlhepyxAsDO0aSyo5x86G6bTJy8saIVSkKu9002dkRmFOq",
+      );
+      const elements = stripe.elements();
+      const card = elements.create("card");
+      card.mount("#card-element");
+
+      const button = document.getElementById("pay-button");
+      const messageDiv = document.getElementById("message");
+
+      // Example JWT token
+      const token =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiY3VzdG9tZXIiLCJlbWFpbCI6ImQ0ZTVkNDIyNGVAZW1haWxheC5wcm8iLCJfaWQiOiI2OWI2OTJhZTE4ODNjMDJjNmJkM2E2ZDgiLCJpYXQiOjE3NzM1NzI4Nzl9.hNs8f1Rx0fgnziivyp6JXtrL3s97IVKPy3AXpzvYghI";
+      const savedCardsSection = document.getElementById("saved-cards-section");
+      const newCardSection = document.getElementById("new-card-section");
+      const savedCardsDropdown = document.getElementById(
+        "saved-cards-dropdown",
+      );
+      const viewSavedBtn = document.getElementById("view-saved-cards");
+      const useNewBtn = document.getElementById("use-new-card");
+
+      let useSavedCard = false;
+
+      // 1️⃣ Fetch Saved Cards from Backend on page load
+      async function loadSavedCards() {
+        const res = await fetch("http://localhost:5000/payment/saved-cards", {
+          headers: { token: token },
+        });
+        const data = await res.json();
+
+        if (data.success && data.cards.length > 0) {
+          // Populate dropdown
+          savedCardsDropdown.innerHTML = data.cards
+            .map(
+              (card) => `
+      <option value="${card.stripePaymentMethodId}">
+        ${card.brand.toUpperCase()} •••• ${card.last4} (Exp: ${card.expMonth}/${card.expYear})
+      </option>
+    `,
+            )
+            .join("");
+
+          // Show saved cards by default
+          showSavedSection();
+          viewSavedBtn.style.display = "block";
+        }
+      }
+
+      function showSavedSection() {
+        savedCardsSection.style.display = "block";
+        newCardSection.style.display = "none";
+        useSavedCard = true;
+      }
+
+      function showNewSection() {
+        savedCardsSection.style.display = "none";
+        newCardSection.style.display = "block";
+        useSavedCard = false;
+      }
+
+      // Toggles
+      useNewBtn.onclick = (e) => {
+        e.preventDefault();
+        showNewSection();
+      };
+      viewSavedBtn.onclick = (e) => {
+        e.preventDefault();
+        showSavedSection();
+      };
+
+      // 2️⃣ Updated Pay Button Logic
+      button.addEventListener("click", async () => {
+        messageDiv.textContent = "Processing...";
+        messageDiv.className = "message"; // Reset classes
+        button.disabled = true;
+
+        let paymentMethodId;
+
+        // 1️⃣ Get PaymentMethodId (either from dropdown or new card)
+        if (useSavedCard) {
+          paymentMethodId = savedCardsDropdown.value;
+        } else {
+          const { error, paymentMethod } = await stripe.createPaymentMethod({
+            type: "card",
+            card: card,
+          });
+          if (error) {
+            handleError(error.message);
+            return;
+          }
+          paymentMethodId = paymentMethod.id;
+        }
+
+        // 2️⃣ Send to backend to create/confirm Intent
+        try {
+          const response = await fetch(
+            "http://localhost:5000/payment/create-payment-intent",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json", token: token },
+              body: JSON.stringify({ paymentMethodId }),
+            },
+          );
+
+          const data = await response.json();
+
+          if (!data.success) {
+            throw new Error(
+              data.message || "Backend failed to create payment intent",
+            );
+          }
+
+          // Payment succeeded!
+          messageDiv.textContent = `Success! Payment ID: ${paymentMethodId}`;
+          messageDiv.className = "message success";
+          // Optional: Hide the button after success
+          button.style.display = "none";
+        } catch (err) {
+          handleError(err.message);
+        } finally {
+          if (messageDiv.className !== "message success") {
+            button.disabled = false;
+          }
+        }
+      });
+
+      // Helper function to show errors
+      function handleError(msg) {
+        messageDiv.textContent = msg;
+        messageDiv.className = "message error";
+        button.disabled = false;
+      }
+
+      // Initialize
+      loadSavedCards();
+    </script>
+  </body>
+</html>
