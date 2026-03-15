@@ -6,10 +6,11 @@ import { ROLES } from "../Constants/roles.js";
 import validationMiddleware from "../Middlewares/validationMiddleware.js";
 import { productSchemaValidation, productUpdateSchema } from "../Validations/productValidation.js";
 import { checkProductOwner } from "../Middlewares/checkProductOwner.js";
+import { upload } from "../Utils/upload.js";
 
 const productRoutes = express.Router()
 
-productRoutes.post("/add-product",isauthenticated,authorizationMiddleware(ROLES.SELLER),validationMiddleware(productSchemaValidation),addProduct)
+productRoutes.post("/add-product",isauthenticated,authorizationMiddleware(ROLES.SELLER),upload.single('image'),validationMiddleware(productSchemaValidation),addProduct)
 productRoutes.get("/list-products", isauthenticated,getAllProducts)
 productRoutes.get("/seller-products",isauthenticated,authorizationMiddleware(ROLES.SELLER),getSellerProducts)
 productRoutes.patch(
