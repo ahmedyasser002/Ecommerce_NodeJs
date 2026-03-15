@@ -6,6 +6,9 @@ import AppError from "../Utils/AppError.js";
 import { buildOrderFilter } from "../Utils/orderFilter.js";
 import { validateObjectId } from "../Utils/validators.js";
 import { couponModel } from "../Models/Coupon.js";
+import { generateDeliveryPath } from "../Utils/delivery.js";
+
+
 
 const createOrder = asyncHandler(async (req, res) => {
 
@@ -307,4 +310,32 @@ const cancelOrder = asyncHandler(async (req, res) => {
 });
 
 
-export { createOrder, getCustomerOrders, getSellerOrders, getAdminOrders, getOrderById, updateOrder, cancelOrder };
+const trackOrder = asyncHandler(async (req, res) => {
+    const orderId  = req.params.id;
+    const io = req.app.get("io");
+
+    const order = await orderModel.findById(orderId);
+    if (!order) throw new AppError("Order not found", 404);
+
+    if (order.status !== "shipped") {
+        throw new AppError("Order is not shipped yet", 400);
+    }
+
+    const path = generateDeliveryPath(); 
+    let index = 0;
+
+    const interval = setInterval(async () => {
+        if (index >= path.length) {
+            clearInterval(interval);
+            io.to(orderId).emit("deliveryComplete", { message: "Order delivered" });
+            return;
+        }
+        io.to(orderId).emit("locationUpdate", path[index]);
+        index++;
+    }, 2000); 
+
+    res.status(200).json({ success: true, message: "Tracking started" });
+});
+
+
+export { createOrder, getCustomerOrders, getSellerOrders, getAdminOrders, getOrderById, updateOrder, cancelOrder, trackOrder };
