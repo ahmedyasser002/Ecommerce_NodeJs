@@ -23,7 +23,7 @@ export const setupPassport = () => {
               isConfirmed: true,
               image: profile.photos[0].value,
               googleId: profile.id,
-              address: { country: "Unknown", city: "Unknown", street: "Unknown" } // لتجنب خطأ address
+              address: { country: "Unknown", city: "Unknown", street: "Unknown" } 
             });
           } else {
             user.name = profile.displayName;
