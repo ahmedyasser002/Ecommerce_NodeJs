@@ -55,6 +55,7 @@ let signin = asyncHandler(async (req, res) => {
     if (cart){
       cart.user=founduser._id;
       cart.expiresAt=undefined;
+      cart.sessionId=undefined;
       await cart.save();
     }
   }
