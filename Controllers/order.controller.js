@@ -8,6 +8,7 @@ import { validateObjectId } from "../Utils/validators.js";
 import { couponModel } from "../Models/Coupon.js";
 import { generateDeliveryPath } from "../Utils/delivery.js";
 import Cart from "../Models/Cart.js";
+import confirmOrder from "../Utils/confirmOrder.js";
 
 const createOrder = asyncHandler(async (req, res) => {
     const userId = req.user._id;
@@ -19,12 +20,11 @@ const createOrder = asyncHandler(async (req, res) => {
         throw new AppError("Cart is empty", 400);
     }
 
-    const { address, couponCode } = req.body;
+    const { address, couponCode, paymentMethod } = req.body;
     const totalPrice = cart.totalPrice;
 
     for (const item of cart.items) {
         const { product, quantity } = item;
-        console.log(product, quantity);
         const foundProduct = await productModel.findById(product);
         if (!foundProduct) {
             throw new AppError("Product is not available", 400);
@@ -87,6 +87,22 @@ const createOrder = asyncHandler(async (req, res) => {
 
         address
     });
+    if(paymentMethod){
+        if(paymentMethod=='card'){
+            order.paymentMethod='card';
+            order.expiresAt=new Date(Date.now() + 60 * 1000);
+        }
+        else{
+            order.paymentMethod='cash_on_delivery';
+            order.expiresAt=undefined;
+            order.paymentId = 'cash';
+            order.status = "confirmed";
+            await confirmOrder('cash', order);
+        }
+        order.paymentStatus = "pending";
+    }
+    await order.save();
+
     res.status(201).json({
         success: true,
         order

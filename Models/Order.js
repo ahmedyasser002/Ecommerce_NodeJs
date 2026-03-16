@@ -45,9 +45,6 @@ const orderSchema = new mongoose.Schema({
                     type: Number,
                     required: true
                 },
-                paymentId: {
-                    type: String
-                }
             }
         ],
         required: true
@@ -72,15 +69,17 @@ const orderSchema = new mongoose.Schema({
         type: addressSchema,
         required: true
     },
+    paymentId: {
+        type: String
+    },
 
-  coupon: {
+    coupon: {
     id: { type: mongoose.Schema.Types.ObjectId, ref: "Coupon" }, 
     code: String,           
     discountValue: Number   
   },
   expiresAt: {
     type: Date,
-    default: () => new Date(Date.now() + 60 * 1000 * 5),
     index: { expires: 0 }
   }
 

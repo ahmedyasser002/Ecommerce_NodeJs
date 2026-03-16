@@ -3,8 +3,7 @@ import asyncHandler from "../Middlewares/asyncHandler.js";
 import AppError from "../Utils/AppError.js";
 import { userModel } from "../Models/User.js";
 import { orderModel } from "../Models/Order.js";
-import Cart from "../Models/Cart.js";
-import { productModel } from "../Models/Product.js";
+import confirmOrder from "../Utils/confirmOrder.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -89,33 +88,8 @@ export const createPaymentIntent = asyncHandler(async (req, res, next) => {
       },
     });
 
-    order.expiresAt = undefined;
-    order.paymentStatus = "paid";
     order.paymentId = paymentIntent.id;
-    order.status = "confirmed";
-    order.paymentMethod = "card";
-    await order.save();
-
-    for (const item of order.products) {
-      const { product, quantity } = item;
-      const updatedProduct = await productModel.findOneAndUpdate(
-        {
-          _id: product,
-          stock: { $gte: quantity },
-        },
-        {
-          $inc: { stock: -quantity },
-        },
-        {
-          new: true,
-        },
-      );
-      if (!updatedProduct) {
-        throw new AppError("Product is not available", 400);
-      }
-    }
-
-    await Cart.findOneAndDelete({ user: userId });
+    await confirmOrder('card', order);
 
     res.status(200).json({
       success: true,
