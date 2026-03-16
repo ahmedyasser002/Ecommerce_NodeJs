@@ -47,16 +47,47 @@ let signin = asyncHandler(async (req, res) => {
     secret_key,
   );
 
-  const session_id = req.headers.session_id;
-  console.log(session_id)
+  const sessionId = req.headers.session_id;
+  console.log(sessionId)
   // Cart Part
-  if(session_id){
-    const cart = await Cart.findOne({ session_id });
-    if (cart){
-      cart.user=founduser._id;
-      cart.expiresAt=undefined;
-      cart.sessionId=undefined;
-      await cart.save();
+  if (sessionId) {
+
+    const guestCart = await Cart.findOne({ sessionId });
+
+    if (guestCart) {
+
+      let userCart = await Cart.findOne({ user: founduser._id });
+
+      if (!userCart) {
+
+        guestCart.user = founduser._id;
+        guestCart.sessionId = undefined;
+        guestCart.expiresAt = undefined;
+
+        await guestCart.save();
+
+      } else {
+
+        guestCart.items.forEach(item => {
+
+          const index = userCart.items.findIndex(
+            i => i.product.toString() === item.product.toString()
+          );
+
+          if (index > -1) {
+            userCart.items[index].quantity += item.quantity;
+            userCart.items[index].totalPrice += item.totalPrice;
+          } else {
+            userCart.items.push(item);
+          }
+
+          userCart.totalPrice += item.totalPrice;
+
+        });
+
+        await userCart.save();
+        await guestCart.deleteOne();
+      }
     }
   }
 
